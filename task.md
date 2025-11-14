@@ -1,210 +1,124 @@
-# 🧭 Project Task: DSPI Internal Cost Report Dashboard (Rincian Biaya SPI)
+# ✅ **Prompt Qoder: Add “Show Entries” Pagination to All Tables**
 
-## 🧩 Project Overview
-Build a **clean, data-focused dashboard website** for the **Internal Audit Division (DSPI)** to display financial reports and operational cost details for the years **2025 and 2026**.  
-The system should provide clear, minimal, and responsive interfaces — optimized for both data visibility and usability by internal officers and administrators.
+**Task: Add a “Show Entries” dropdown and pagination system to every data table (BPD table, Beban Biaya table, and any other tables).**
+
+### **Requirements:**
+
+1. **Add a “Show Entries” selector** above each table with options:
+
+   * 10
+   * 25
+   * 50
+   * 100
+   * All
+
+   Example UI:
+
+   ```
+   Show [ 10 ▼ ] entries
+   ```
+
+2. When the user changes the selected value:
+
+   * The table must re-render showing **only that number of rows**.
+   * If “All” is selected, show all table rows.
+
+3. Implement **client-side pagination** (no need to fetch again from Supabase):
+
+   * Keep the full dataset in memory.
+   * Slice the data depending on the chosen entry count.
+
+4. Add **Next / Previous** pagination buttons under the table:
+
+   * “Prev” (disabled on first page)
+   * Page number
+   * “Next” (disabled on last page)
+
+   Example:
+
+   ```
+   Showing 1–10 of 85 entries  
+   [Prev]  1 2 3 4 5  [Next]
+   ```
+
+5. Ensure it works for **all tables** in the workspace:
+
+   * BPD table (`transactions-table-container`)
+   * Beban Biaya tables
+   * Any modular table loaded through JS
+
+6. The feature must be **fully responsive** (mobile-friendly).
+
+   * On small screens, dropdown and pagination should stack vertically.
+
+7. Do not break existing features:
+
+   * Search bar
+   * Export Excel / PDF
+   * Add Data button
+   * Sorting (if any)
+   * Real-time updates from Supabase
+
+8. Implement reusable code:
+
+   * Create a helper function like:
+
+     ```js
+     function applyPagination(tableId, dataArray) { ... }
+     ```
+   * This function should:
+
+     * Handle dropdown changes
+     * Handle slicing
+     * Handle pagination navigation
+     * Re-render the table body cleanly
+
+9. Insert the dropdown **above the table**, aligned to the left:
+
+   * Search box stays right-aligned
+   * Export buttons stay right-aligned
+   * Use Flexbox with wrapping for responsiveness
+
+10. Make the UI clean using Tailwind classes.
 
 ---
 
-## 🧱 Tech Stack
-- **Frontend:** HTML5, TailwindCSS, Vanilla JavaScript (ES6)
-- **Backend / Database:** Supabase (PostgreSQL + Realtime API)
-- **Chart Library:** Chart.js (for Pie Chart in BPD module)
-- **Export Library:** SheetJS (Excel) & jsPDF (PDF)
+### **Example Implementation Style (Qoder may follow this structure):**
 
----
+* Add this HTML snippet above each table:
 
-## ⚙️ Supabase Database Tables
-The database is already created and includes:
-
-| Table / View | Description |
-|---------------|-------------|
-| `beban_biaya_master` | Master list for expense categories |
-| `beban_biaya_transaksi` | Transaction logs for each expense category |
-| `bpd_master` | Detailed travel cost records (BPD) |
-| `profiles` | User profiles and roles (admin / user) |
-| `vw_bpd_summary_by_auditor` | View summarizing top 3 auditor spending |
-| `vw_ringkasan_beban_biaya` | View summarizing expense totals (awal & akhir) |
-
----
-
-## 🧭 Navigation Structure
-
-### Header Menu (no sidebar)
+```html
+<div class="flex flex-wrap items-center justify-between mb-4 gap-4">
+  <div class="flex items-center gap-2">
+    <label class="text-sm">Show</label>
+    <select id="entriesSelect" class="border rounded px-2 py-1">
+        <option value="10">10</option>
+        <option value="25">25</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+        <option value="all">All</option>
+    </select>
+    <span class="text-sm">entries</span>
+  </div>
+</div>
 ```
 
-| 2025 | 2026 |
+* Below the table, Qoder should generate pagination controls:
 
+```html
+<div id="tablePagination" class="flex justify-between items-center mt-4"></div>
 ```
 
-When clicking **2025**, a dropdown appears:
-```
-
-* Beban Biaya Perjalanan Dinas (BPD)
-* Beban Biaya Audit
-* Beban Jasa Profesional (Konsultan)
-* Beban Biaya Iuran, Sumbangan & Retribusi
-* Beban Biaya Tamu
-* Beban Biaya Rapat
-
-```
-
-> Each submenu will dynamically load content into the main area without page reload (SPA style).
-
 ---
 
-## 👥 User Roles
+### **Deliverables Qoder Should Produce:**
 
-| Role | Access & Features |
-|-------|--------------------|
-| **User** | View summary cards (Initial Amount, Final Amount). Click a sub-item to view details only. |
-| **Admin** | View summary cards and **access input form** to record new transactions (date, activity name, number of people, and cost). System automatically recalculates Final Amount = Initial Amount - Total Cost. |
-
----
-
-## 📊 Data Presentation Rules
-
-### 1. **BPD (Biaya Perjalanan Dinas)**
-- Display summary data from `vw_bpd_summary_by_auditor`
-- Include a **Pie Chart (Top 3 Auditors)** by total accommodation cost
-- Show details per record:
-  - Audit name, requester, audit type, SPD number, BPD number, period, costs (departure, lodging, return, realization)
-
-### 2. **Other Expense Categories (Audit, Konsultan, Iuran, Tamu, Rapat)**
-- Display data from `vw_ringkasan_beban_biaya`
-- Show **summary cards**:
-  - “Initial Amount”
-  - “Final Amount”
-- For admin users: include a **form** with fields:
-  - Date of activity
-  - Activity name
-  - Number of people
-  - Cost (auto updates final amount)
-
----
-
-## ⚡ Required Features
-
-| Feature | Description |
-|----------|-------------|
-| 🔄 **Auto-refresh** | Realtime updates via Supabase Realtime API |
-| 📤 **Export Data** | Export table data to Excel and PDF |
-| 🔍 **Date Filter** | Filter transactions by date range |
-| 🧮 **Auto Calculation** | Final amount auto-updates on data input |
-| 📈 **Pie Chart** | Show top 3 spenders (auditors) dynamically |
-| 🧾 **Responsive UI** | Layout adapts cleanly to desktop/tablet screens |
-
----
-
-## 🗂️ Folder Structure
-
-```
-
-dspi-dashboard/
-│
-├── index.html
-├── js/
-│   ├── supabaseClient.js
-│   ├── bpd.js
-│   ├── bebanBiaya.js
-│   └── utils.js
-│
-├── css/
-│   └── style.css
-└── assets/
-└── logo.png
-
-````
-
----
-
-## 📄 File Responsibilities
-
-### `index.html`
-- Header navigation (2025 & 2026)
-- Dropdown submenus
-- Main content container (`#content`)
-- Minimal Tailwind design, clean white background
-
-### `supabaseClient.js`
-- Initialize Supabase connection:
-  ```js
-  import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-  export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-````
-
-### `bpd.js`
-
-* Fetch summary data from `vw_bpd_summary_by_auditor`
-* Render a pie chart (Top 3 auditors)
-* Display detailed BPD records
-
-### `bebanBiaya.js`
-
-* Fetch from `vw_ringkasan_beban_biaya`
-* Display cards (Initial/Final)
-* Render input form (admin)
-* Handle data insertion and automatic recalculation
-
-### `utils.js`
-
-* Format currency and dates
-* Handle export (Excel, PDF)
-* Filter by date range
-* Handle role-based view (admin/user)
-
----
-
-## 🚀 Development Workflow
-
-1. **Initialize Project**
-
-   * Create HTML structure with Tailwind
-   * Setup Supabase connection in `supabaseClient.js`
-
-2. **Implement Header Navigation**
-
-   * Header with 2025 & 2026 buttons
-   * Dropdown menus with click-to-load feature (using JS DOM manipulation)
-
-3. **Integrate Supabase Data**
-
-   * Fetch BPD summary and expense data
-   * Render dynamically inside `#content`
-
-4. **Add Admin Features**
-
-   * Add transaction form
-   * Insert new data via Supabase
-   * Update and recalculate final amount automatically
-
-5. **Implement Utilities**
-
-   * Auto-refresh via Supabase Realtime
-   * Export (Excel, PDF)
-   * Date filter
-
-6. **Enhance UI**
-
-   * Apply consistent Tailwind theme (white background, soft shadows, rounded corners)
-   * Add loading states, responsive design
-
----
-
-## 🎯 Design Goals
-
-* Clean, minimal UI (no unnecessary charts or cards)
-* Easy to read and navigate for DSPI officers
-* Real-time and accurate data presentation
-* Mobile-friendly but optimized for desktop
-
----
-
-## ✅ Output Expectation
-
-A fully functional dashboard website connected to Supabase:
-
-* Users can view real-time financial data
-* Admins can input new expense records
-* Data automatically updates and exports on demand
+✔ Update HTML structure for all tables
+✔ Implement JS pagination logic
+✔ Add dropdown selector
+✔ Add next/prev buttons
+✔ Add “Showing X of Y entries” text
+✔ Ensure compatibility with existing sorting/search/export features
+✔ Make it responsive with Tailwind
+✔ Apply automatically to all data tables in the system
 

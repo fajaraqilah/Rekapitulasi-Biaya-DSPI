@@ -1,5 +1,6 @@
 import { supabase } from './supabaseClient.js';
 import { formatCurrency, exportToExcel, exportToPDF } from './utils.js';
+import { applyPagination } from './utils.js';
 
 let currentBPDData = [];
 let currentChartData = [];
@@ -116,26 +117,268 @@ export async function loadBPDContent(container) {
         // Fetch initial data
         const { chartData, top3, bottom3, bpdData } = await fetchBpdData();
         
+        // Store references to current data
         currentBPDData = bpdData;
         currentChartData = chartData;
         
-        // Render the content
-        renderBPDContent(container, chartData, top3, bottom3, bpdData);
+        // Render the UI
+        container.innerHTML = `
+            <div class="bpd-container">
+                <div class="bpd-header">
+                    <h2 class="bpd-title">BPD (Biaya Perjalanan Dinas)</h2>
+                </div>
+                
+                <!-- Chart Section -->
+                <div class="chart-container">
+                    <h3 class="chart-header">Total Biaya per Audit</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="bpdChart"></canvas>
+                    </div>
+                </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-5">
+
+                    <!-- TOP 3 -->
+                    <div class="summary-card">
+                        <h3 class="summary-card-header mb-4">Top 3 Highest BPD 🔺</h3>
+
+                        <div class="space-y-4">
+                            ${top3.map((record, index) => `
+                            <div class="bg-gradient-to-r from-red-50 to-red-100 shadow rounded-lg p-4 border border-red-200">
+                                <div class="flex justify-between items-center">
+                                    <h4 class="font-semibold text-gray-800">${record.nama_audit || 'Unknown'}</h4>
+                                    <span class="text-sm text-gray-600">#${index + 1}</span>
+                                </div>
+                                <p class="text-xl font-bold text-red-600 mt-2">
+                                    ${formatCurrency(record.total_akomodasi_biaya_dinas || 0)}
+                                </p>
+                            </div>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <!-- BOTTOM 3 -->
+                    <div class="summary-card">
+                        <h3 class="summary-card-header mb-4">Bottom 3 Lowest BPD 🔻</h3>
+
+                        <div class="space-y-4">
+                            ${bottom3.map((record, index) => `
+                            <div class="bg-gradient-to-r from-green-50 to-green-100 shadow rounded-lg p-4 border border-green-200">
+                                <div class="flex justify-between items-center">
+                                    <h4 class="font-semibold text-gray-800">${record.nama_audit || 'Unknown'}</h4>
+                                    <span class="text-sm text-gray-600">#${index + 1}</span>
+                                </div>
+                                <p class="text-xl font-bold text-green-600 mt-2">
+                                    ${formatCurrency(record.total_akomodasi_biaya_dinas || 0)}
+                                </p>
+                            </div>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                </div>
+
+                </div>
+                
+                <!-- BPD Records Table with Add Data Button -->
+                <div class="transactions-table-container" id="bpdTableContainer">
+                    <div class="transactions-table-header flex flex-wrap items-center justify-between gap-4">
+                        <h3 class="transactions-table-title">Daftar Data BPD</h3>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <input type="text" id="searchInput" class="form-control border rounded px-2 py-1" placeholder="Cari data..." style="width: 300px;">
+                            <button id="exportExcelTable" class="export-button excel">Excel</button>
+                            <button id="exportPDFTable" class="export-button pdf">PDF</button>
+                            <button id="addDataBtn" class="add-transaction-button">+ Tambah Data</button>
+                        </div>
+                    </div>
+                    <!-- Add Data Form (hidden by default) -->
+                    <div id="addDataFormContainer" class="hidden mt-4 mb-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                        <h4 class="text-lg font-bold mb-4">Tambah Data BPD</h4>
+                        <form id="addDataForm" class="space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="form-label">Nama Audit</label>
+                                    <input type="text" id="namaAudit" class="form-control" required>
+                                </div>
+                                <div>
+                                    <label class="form-label">Nama Pemesan</label>
+                                    <input type="text" id="namaPemesan" class="form-control" required>
+                                </div>
+                                <div>
+                                    <label class="form-label">Jenis Audit</label>
+                                    <input type="text" id="jenisAudit" class="form-control" required>
+                                </div>
+                                <div>
+                                    <label class="form-label">Nomor SPD</label>
+                                    <input type="text" id="noSpd" class="form-control" required>
+                                </div>
+                                <div>
+                                    <label class="form-label">Nomor BPD</label>
+                                    <input type="text" id="noBpd" class="form-control" required>
+                                </div>
+                                <div>
+                                    <label class="form-label">Periode Awal</label>
+                                    <input type="date" id="periodeAwal" class="form-control" required>
+                                </div>
+                                <div>
+                                    <label class="form-label">Periode Akhir</label>
+                                    <input type="date" id="periodeAkhir" class="form-control" required>
+                                </div>
+                                <div>
+                                    <label class="form-label">Lama Audit (hari)</label>
+                                    <input type="number" id="lamaAudit" class="form-control" min="1" required>
+                                    <div id="periodeError" class="text-red-500 text-sm mt-1 hidden">Periode akhir harus setelah atau sama dengan periode awal</div>
+                                </div>
+                                <div>
+                                    <label class="form-label">Biaya Berangkat</label>
+                                    <input type="number" id="biayaBerangkat" class="form-control" min="0" step="0.01" required>
+                                </div>
+                                <div>
+                                    <label class="form-label">Biaya Penginapan</label>
+                                    <input type="number" id="biayaPenginapan" class="form-control" min="0" step="0.01" required>
+                                </div>
+                                <div>
+                                    <label class="form-label">Biaya Pulang</label>
+                                    <input type="number" id="biayaPulang" class="form-control" min="0" step="0.01" required>
+                                </div>
+                                <div>
+                                    <label class="form-label">Total Akomodasi</label>
+                                    <input type="number" id="totalAkomodasi" class="form-control" min="0" step="0.01" readonly>
+                                </div>
+                                <div>
+                                    <label class="form-label">Rincian Biaya Dinas</label>
+                                    <input type="number" id="rincianBiayaDinas" class="form-control" min="0" step="0.01" required>
+                                </div>
+                                <div>
+                                    <label class="form-label">Total Akomodasi + Biaya Dinas</label>
+                                    <input type="number" id="totalAkomodasiBiayaDinas" class="form-control" min="0" step="0.01" readonly>
+                                </div>
+                                <div>
+                                    <label class="form-label">Realisasi</label>
+                                    <input type="number" id="realisasi" class="form-control" min="0" step="0.01" required>
+                                </div>
+                            </div>
+                            <div class="flex justify-end space-x-2 pt-4">
+                                <button type="button" id="cancelAddDataBtn" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Batal</button>
+                                <button type="submit" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600">Simpan</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="table-container">
+                        <table class="transactions-table">
+                            <thead>
+                                <tr>
+                                    <th>Nama Audit</th>
+                                    <th>Nama Pemesan</th>
+                                    <th>Jenis Audit</th>
+                                    <th>No SPD</th>
+                                    <th>No BPD</th>
+                                    <th>Periode</th>
+                                    <th>Lama Audit</th>
+                                    <th>Total Biaya</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bpdTableBody">
+                                <!-- Table rows will be populated by pagination -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+        `;
         
-        // Set up real-time subscription
-        realtimeSubscription = supabase.channel('bpd_changes')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'bpd_master' }, async () => {
-                // Fetch updated data
-                const { chartData: updatedChartData, top3: updatedTop3, bottom3: updatedBottom3, bpdData: updatedBpdData } = await fetchBpdData();
-                
-                // Update current data
-                currentBPDData = updatedBpdData;
-                currentChartData = updatedChartData;
-                
-                // Re-render content
-                renderBPDContent(container, updatedChartData, updatedTop3, updatedBottom3, updatedBpdData);
-            })
-            .subscribe();
+        // Initialize chart after a short delay to ensure DOM is fully rendered
+        setTimeout(() => {
+            initBPDChart(chartData);
+        }, 100);
+        
+        // Apply pagination to the table
+        const pagination = applyPagination('bpdTableContainer', bpdData, (record) => {
+            // This filter function will be used for search functionality
+            const searchTerm = document.getElementById('searchInput')?.value.toLowerCase() || '';
+            if (!searchTerm) return true;
+            
+            return (
+                (record.nama_audit && record.nama_audit.toLowerCase().includes(searchTerm)) ||
+                (record.nama_pemesan && record.nama_pemesan.toLowerCase().includes(searchTerm)) ||
+                (record.jenis_audit && record.jenis_audit.toLowerCase().includes(searchTerm)) ||
+                (record.no_spd && record.no_spd.toLowerCase().includes(searchTerm)) ||
+                (record.no_bpd && record.no_bpd.toLowerCase().includes(searchTerm))
+            );
+        });
+        
+        // Function to render table rows
+        function renderTableRows(data) {
+            const tableBody = document.getElementById('bpdTableBody');
+            if (!tableBody) return;
+            
+            if (data.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="8" class="text-center py-4">No data available</td></tr>';
+                return;
+            }
+            
+            tableBody.innerHTML = data.map(record => `
+                <tr>
+                    <td>${record.nama_audit || '-'}</td>
+                    <td>${record.nama_pemesan || '-'}</td>
+                    <td>${record.jenis_audit || '-'}</td>
+                    <td>${record.no_spd || '-'}</td>
+                    <td>${record.no_bpd || '-'}</td>
+                    <td>${record.periode_awal || '-'} S.d ${record.periode_akhir || '-'}</td>
+                    <td>${record.lama_audit || '-'} Hari</td>
+                    <td>${formatCurrency(record.total_akomodasi_biaya_dinas || 0)}</td>
+                </tr>
+            `).join('');
+        }
+        
+        // Set the render callback for pagination
+        pagination.setRenderCallback(renderTableRows);
+        
+        // Initial table render
+        pagination.render();
+        
+        // Add event listeners for table export buttons
+        document.getElementById('exportExcelTable').addEventListener('click', () => {
+            exportToExcel(bpdData, 'BPD_Records');
+        });
+        
+        document.getElementById('exportPDFTable').addEventListener('click', () => {
+            exportToPDF(bpdData, 'BPD Records');
+        });
+        
+        // Add search functionality
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                // Re-render pagination with new search term
+                pagination.render();
+            });
+        }
+        
+        // Add event listeners for inline form
+        document.getElementById('addDataBtn').addEventListener('click', () => {
+            document.getElementById('addDataFormContainer').classList.remove('hidden');
+        });
+        
+        document.getElementById('cancelAddDataBtn').addEventListener('click', () => {
+            document.getElementById('addDataFormContainer').classList.add('hidden');
+            // Reset form
+            document.getElementById('addDataForm').reset();
+        });
+        
+        // Add form submission handler
+        document.getElementById('addDataForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await handleFormSubmit(container);
+            // Refresh the data after form submission
+            await loadBPDContent(container);
+        });
+        
+        // Add auto-calculation for total fields
+        setupFormCalculations();
+        
+        // Add form validation
+        setupFormValidation();
     } catch (error) {
         console.error('Error loading BPD content:', error);
         container.innerHTML = `
@@ -145,223 +388,6 @@ export async function loadBPDContent(container) {
             </div>
         `;
     }
-}
-
-// Function to render BPD content
-function renderBPDContent(container, chartData, top3, bottom3, bpdData) {
-    container.innerHTML = `
-        <div class="bpd-container">
-            <div class="bpd-header">
-                <h2 class="bpd-title">Beban Biaya Perjalanan Dinas (BPD)</h2>
-                <div class="export-buttons">
-                    <button id="exportExcel" class="export-button excel">Excel</button>
-                    <button id="exportPDF" class="export-button pdf">PDF</button>
-                </div>
-            </div>
-            
-            <!-- Chart Filter -->
-            <div class="chart-header">Total Biaya Per Audit</div>
-            
-            <!-- Pie Chart -->
-            <div class="chart-container">
-                <div class="chart-wrapper">
-                    <canvas id="bpdChart"></canvas>
-                </div>
-            </div>
-            
-            <!-- Top 3 and Bottom 3 Cards -->
-            <div class="summary-cards">
-                <div class="summary-card">
-                    <h3 class="summary-card-header">Top 3 Highest BPD 🔺</h3>
-                    <div class="space-y-4">
-                        ${top3.map((record, index) => `
-                        <div class="bg-gradient-to-r from-red-50 to-red-100 shadow rounded-lg p-4 border border-red-200">
-                            <div class="flex justify-between items-center">
-                                <h4 class="font-semibold text-gray-800">${record.nama_audit || 'Unknown'}</h4>
-                                <span class="text-sm text-gray-600">#${index + 1}</span>
-                            </div>
-                            <p class="text-xl font-bold text-red-600 mt-2">${formatCurrency(record.total_akomodasi_biaya_dinas || 0)}</p>
-                        </div>
-                        `).join('')}
-                    </div>
-                </div>
-                <div class="summary-card">
-                    <h3 class="summary-card-header">Bottom 3 Lowest BPD 🔻</h3>
-                    <div class="space-y-4">
-                        ${bottom3.map((record, index) => `
-                        <div class="bg-gradient-to-r from-green-50 to-green-100 shadow rounded-lg p-4 border border-green-200">
-                            <div class="flex justify-between items-center">
-                                <h4 class="font-semibold text-gray-800">${record.nama_audit || 'Unknown'}</h4>
-                                <span class="text-sm text-gray-600">#${index + 1}</span>
-                            </div>
-                            <p class="text-xl font-bold text-green-600 mt-2">${formatCurrency(record.total_akomodasi_biaya_dinas || 0)}</p>
-                        </div>
-                        `).join('')}
-                    </div>
-                </div>
-            </div>
-            
-            <!-- BPD Records Table with Add Data Button -->
-            <div class="transactions-table-container">
-                <div class="transactions-table-header">
-                    <h3 class="transactions-table-title">Daftar Data BPD</h3>
-                    <button id="addDataBtn" class="add-transaction-button">+ Tambah Data</button>
-                </div>
-                <div class="table-container">
-                    <table class="transactions-table">
-                        <thead>
-                            <tr>
-                                <th>Nama Audit</th>
-                                <th>Nama Pemesan</th>
-                                <th>Jenis Audit</th>
-                                <th>No SPD</th>
-                                <th>No BPD</th>
-                                <th>Periode</th>
-                                <th>Lama Audit</th>
-                                <th>Total Biaya</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${bpdData.map(record => `
-                                <tr>
-                                    <td>${record.nama_audit || '-'}</td>
-                                    <td>${record.nama_pemesan || '-'}</td>
-                                    <td>${record.jenis_audit || '-'}</td>
-                                    <td>${record.no_spd || '-'}</td>
-                                    <td>${record.no_bpd || '-'}</td>
-                                    <td>${record.periode_awal || '-'} to ${record.periode_akhir || '-'}</td>
-                                    <td>${record.lama_audit || '-'} days</td>
-                                    <td>${formatCurrency(record.total_akomodasi_biaya_dinas || 0)}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Add Data Modal -->
-        <div id="addModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
-            <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl max-h-screen overflow-y-auto">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-bold">Tambah Data BPD</h3>
-                    <button id="closeModal" class="text-gray-500 hover:text-gray-700">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
-                </div>
-                <form id="addDataForm" class="space-y-4">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="form-label">Nama Audit</label>
-                            <input type="text" id="namaAudit" class="form-control" required>
-                        </div>
-                        <div>
-                            <label class="form-label">Nama Pemesan</label>
-                            <input type="text" id="namaPemesan" class="form-control" required>
-                        </div>
-                        <div>
-                            <label class="form-label">Jenis Audit</label>
-                            <input type="text" id="jenisAudit" class="form-control" required>
-                        </div>
-                        <div>
-                            <label class="form-label">Nomor SPD</label>
-                            <input type="text" id="noSpd" class="form-control" required>
-                        </div>
-                        <div>
-                            <label class="form-label">Nomor BPD</label>
-                            <input type="text" id="noBpd" class="form-control" required>
-                        </div>
-                        <div>
-                            <label class="form-label">Periode Awal</label>
-                            <input type="date" id="periodeAwal" class="form-control" required>
-                        </div>
-                        <div>
-                            <label class="form-label">Periode Akhir</label>
-                            <input type="date" id="periodeAkhir" class="form-control" required>
-                        </div>
-                        <div>
-                            <label class="form-label">Lama Audit (hari)</label>
-                            <input type="number" id="lamaAudit" class="form-control" min="1" required>
-                            <div id="periodeError" class="text-red-500 text-sm mt-1 hidden">Periode akhir harus setelah atau sama dengan periode awal</div>
-                        </div>
-                        <div>
-                            <label class="form-label">Biaya Berangkat</label>
-                            <input type="number" id="biayaBerangkat" class="form-control" min="0" step="0.01" required>
-                        </div>
-                        <div>
-                            <label class="form-label">Biaya Penginapan</label>
-                            <input type="number" id="biayaPenginapan" class="form-control" min="0" step="0.01" required>
-                        </div>
-                        <div>
-                            <label class="form-label">Biaya Pulang</label>
-                            <input type="number" id="biayaPulang" class="form-control" min="0" step="0.01" required>
-                        </div>
-                        <div>
-                            <label class="form-label">Total Akomodasi</label>
-                            <input type="number" id="totalAkomodasi" class="form-control" min="0" step="0.01" readonly>
-                        </div>
-                        <div>
-                            <label class="form-label">Rincian Biaya Dinas</label>
-                            <input type="number" id="rincianBiayaDinas" class="form-control" min="0" step="0.01" required>
-                        </div>
-                        <div>
-                            <label class="form-label">Total Akomodasi + Biaya Dinas</label>
-                            <input type="number" id="totalAkomodasiBiayaDinas" class="form-control" min="0" step="0.01" readonly>
-                        </div>
-                        <div>
-                            <label class="form-label">Realisasi</label>
-                            <input type="number" id="realisasi" class="form-control" min="0" step="0.01" required>
-                        </div>
-                    </div>
-                    <div class="flex justify-end space-x-2 pt-4">
-                        <button type="button" id="closeModalBtn" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Batal</button>
-                        <button type="submit" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600">Simpan</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    `;
-    
-    // Initialize chart after a short delay to ensure DOM is fully rendered
-    setTimeout(() => {
-        initBPDChart(chartData);
-    }, 100);
-    
-    // Add event listeners for export buttons
-    document.getElementById('exportExcel').addEventListener('click', () => {
-        exportToExcel(bpdData, 'BPD_Records');
-    });
-    
-    document.getElementById('exportPDF').addEventListener('click', () => {
-        exportToPDF(bpdData, 'BPD Records');
-    });
-    
-    // Add event listeners for modal
-    document.getElementById('addDataBtn').addEventListener('click', () => {
-        document.getElementById('addModal').classList.remove('hidden');
-    });
-    
-    document.getElementById('closeModal').addEventListener('click', () => {
-        document.getElementById('addModal').classList.add('hidden');
-    });
-    
-    document.getElementById('closeModalBtn').addEventListener('click', () => {
-        document.getElementById('addModal').classList.add('hidden');
-    });
-    
-    // Add form submission handler
-    document.getElementById('addDataForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        await handleFormSubmit(container);
-    });
-    
-    // Add auto-calculation for total fields
-    setupFormCalculations();
-    
-    // Add form validation
-    setupFormValidation();
 }
 
 // Function to initialize BPD chart
@@ -438,9 +464,16 @@ function initBPDChart(chartData) {
                     labels: {
                         padding: 20,
                         usePointStyle: true,
-                        font: {
-                            size: 18,
-                            weight: 'bold'
+                        font: function(context) {
+                            var width = context.chart.width;
+                            var size = Math.round(width / 30); // Adjust this ratio as needed
+                            // Ensure minimum and maximum font sizes
+                            size = Math.max(size, 12);
+                            size = Math.min(size, 18);
+                            return {
+                                size: size,
+                                weight: 'bold'
+                            };
                         }
                     }
                 },
@@ -467,9 +500,16 @@ function initBPDChart(chartData) {
                             : '';
                     },
                     color: '#fff',
-                    font: {
-                        weight: 'bold',
-                        size: 20
+                    font: function(context) {
+                        var width = context.chart.width;
+                        var size = Math.round(width / 24); // Adjust this ratio as needed
+                        // Ensure minimum and maximum font sizes
+                        size = Math.max(size, 12);
+                        size = Math.min(size, 20);
+                        return {
+                            weight: 'bold',
+                            size: size
+                        };
                     },
                     anchor: 'center',
                     align: 'center'
@@ -480,6 +520,13 @@ function initBPDChart(chartData) {
             }
         },
         plugins: [ChartDataLabels]
+    });
+    
+    // Add resize event listener to update chart
+    window.addEventListener('resize', function() {
+        if (canvas.chart) {
+            canvas.chart.resize();
+        }
     });
 }
 
@@ -625,8 +672,8 @@ async function handleFormSubmit(container) {
         // Show success message
         showToast('Data BPD berhasil ditambahkan!', 'success');
         
-        // Close modal
-        document.getElementById('addModal').classList.add('hidden');
+        // Hide form
+        document.getElementById('addDataFormContainer').classList.add('hidden');
         
         // Reset form
         document.getElementById('addDataForm').reset();

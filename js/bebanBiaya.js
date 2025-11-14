@@ -1,11 +1,12 @@
 import { supabase } from './supabaseClient.js';
 import { formatCurrency, exportToExcel, exportToPDF } from './utils.js';
+import { applyPagination } from './utils.js';
 
 // Mapping module names to database categories
 const moduleCategoryMap = {
     'audit': 'Beban Biaya Audit',
-    'konsultan': 'Beban Biaya Konsultan',
-    'iuran': 'Beban Biaya Iuran',
+    'konsultan': 'Beban Biaya Jasa Profesional (Konsultan)',
+    'iuran': 'Beban Biaya Iuran, Sumbangan & Retribusi',
     'tamu': 'Beban Biaya Tamu',
     'rapat': 'Beban Biaya Rapat'
 };
@@ -50,19 +51,45 @@ function renderInitialContent(container, module, categoryName) {
         <div class="bpd-container">
             <div class="bpd-header">
                 <h2 class="bpd-title">${categoryName}</h2>
-                <div class="export-buttons">
-                    <button id="exportExcel" class="export-button excel hidden">Excel</button>
-                    <button id="exportPDF" class="export-button pdf hidden">PDF</button>
-                </div>
             </div>
             
-            <!-- Subcategory Dropdown -->
-            <div class="mb-4">
-                <label class="form-label">Subkategori</label>
-                <select id="subKategoriSelect" class="form-control" required>
-                    <option value="">-- Pilih Subkategori --</option>
-                </select>
-            </div>
+<!-- Premium Subkategori Dropdown -->
+<div class="mb-6">
+    <label class="block text-sm font-semibold text-gray-700 mb-2">
+        Subkategori
+    </label>
+
+    <div class="relative group">
+        <!-- Dropdown -->
+        <select 
+    id="subKategoriSelect"
+    class="block w-full px-4 py-3 
+           bg-white border border-gray-300 border-b-2 rounded-lg
+           text-gray-700 cursor-pointer
+           transition-all duration-200 ease-out
+           hover:border-blue-400 hover:shadow-md
+           focus:ring-2 focus:ring-blue-300 focus:border-blue-500
+           appearance-none"
+>
+
+            <option value="" disabled selected>-- Pilih Subkategori --</option>
+        </select>
+
+        <!-- Custom Arrow -->
+        <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+            <svg id="dropdownArrow"
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5 text-gray-500 transition-transform duration-200"
+                viewBox="0 0 20 20" fill="currentColor"
+            >
+                <path fill-rule="evenodd"
+                    d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"
+                    clip-rule="evenodd" />
+            </svg>
+        </div>
+    </div>
+</div>
+
             
             <!-- Summary Cards Container -->
             <div id="summaryCardsContainer"></div>
@@ -109,8 +136,14 @@ function renderInitialContent(container, module, categoryName) {
 
 // Function to populate subcategory dropdown
 async function populateSubcategoryDropdown(categoryName) {
+    const subKategoriSelect = document.getElementById("subKategoriSelect");
+const dropdownArrow = document.getElementById("dropdownArrow");
+
+subKategoriSelect.addEventListener("click", () => {
+    dropdownArrow.classList.toggle("rotate-180");
+});
     const subSelect = document.getElementById('subKategoriSelect');
-    if (subSelect) {
+    if (subSelect) {    
         try {
             const { data: subList, error: subError } = await supabase
                 .from('beban_biaya_master')
@@ -264,8 +297,17 @@ function updateUIWithSubcategoryData(summaryData, transactionData, subKategori) 
     const transactionsTableContainer = document.getElementById('transactionsTableContainer');
     if (transactionData && transactionsTableContainer) {
         transactionsTableContainer.innerHTML = `
-            <div class="transactions-table-container">
-                <h3 class="transactions-table-title">Daftar Transaksi - ${subKategori}</h3>
+            <div class="transactions-table-container" id="bebanBiayaTableContainer">
+                <div class="flex flex-wrap items-center justify-between mb-4 gap-4">
+                    <h3 class="transactions-table-title">Daftar Transaksi - ${subKategori}</h3>
+                    <div class="flex items-center space-x-2">
+                        <input type="text" id="bebanBiayaSearchInput" class="form-control border rounded px-2 py-1" placeholder="Cari data..." style="width: 200px;">
+                        <div class="export-buttons">
+                    <button id="exportExcel" class="export-button excel hidden">Excel</button>
+                    <button id="exportPDF" class="export-button pdf hidden">PDF</button>
+                </div>
+                    </div>
+                </div>
                 <div class="table-container">
                     <table class="transactions-table">
                         <thead>
@@ -277,21 +319,63 @@ function updateUIWithSubcategoryData(summaryData, transactionData, subKategori) 
                                 <th>Jumlah Transaksi</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            ${transactionData.map(transaction => `
-                                <tr>
-                                    <td>${transaction.tanggal_kegiatan || '-'}</td>
-                                    <td>${transaction.nama_kegiatan || '-'}</td>
-                                    <td>${transaction.jumlah_orang || '-'}</td>
-                                    <td>${formatCurrency(transaction.biaya_kegiatan)}</td>
-                                    <td>1</td>
-                                </tr>
-                            `).join('')}
+                        <tbody id="bebanBiayaTableBody">
+                            <!-- Table rows will be populated by pagination -->
                         </tbody>
                     </table>
                 </div>
             </div>
         `;
+        
+        // Apply pagination to the table
+        const pagination = applyPagination('bebanBiayaTableContainer', transactionData, (record) => {
+            // This filter function will be used for search functionality
+            const searchTerm = document.getElementById('bebanBiayaSearchInput')?.value.toLowerCase() || '';
+            if (!searchTerm) return true;
+            
+            return (
+                (record.tanggal_kegiatan && record.tanggal_kegiatan.toLowerCase().includes(searchTerm)) ||
+                (record.nama_kegiatan && record.nama_kegiatan.toLowerCase().includes(searchTerm)) ||
+                (record.jumlah_orang && record.jumlah_orang.toString().includes(searchTerm)) ||
+                (record.biaya_kegiatan && record.biaya_kegiatan.toString().includes(searchTerm))
+            );
+        });
+        
+        // Function to render table rows
+        function renderTableRows(data) {
+            const tableBody = document.getElementById('bebanBiayaTableBody');
+            if (!tableBody) return;
+            
+            if (data.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="5" class="text-center py-4">No data available</td></tr>';
+                return;
+            }
+            
+            tableBody.innerHTML = data.map(transaction => `
+                <tr>
+                    <td>${transaction.tanggal_kegiatan || '-'}</td>
+                    <td>${transaction.nama_kegiatan || '-'}</td>
+                    <td>${transaction.jumlah_orang || '-'}</td>
+                    <td>${formatCurrency(transaction.biaya_kegiatan)}</td>
+                    <td>1</td>
+                </tr>
+            `).join('');
+        }
+        
+        // Set the render callback for pagination
+        pagination.setRenderCallback(renderTableRows);
+        
+        // Initial table render
+        pagination.render();
+        
+        // Add search functionality
+        const searchInput = document.getElementById('bebanBiayaSearchInput');
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                // Re-render pagination with new search term
+                pagination.render();
+            });
+        }
     }
     
     // Show export buttons only when there are transactions
@@ -304,16 +388,23 @@ function updateUIWithSubcategoryData(summaryData, transactionData, subKategori) 
         
         // Update export button event listeners
         exportExcelBtn.onclick = () => {
-            exportToExcel(transactionData, `${currentModule}_${subKategori}_transactions`);
+            // Use the full dataset, not just the paginated data
+            exportToExcel(window.currentTransactionData || transactionData, `${currentModule}_${subKategori}_transactions`);
         };
         
         exportPdfBtn.onclick = () => {
-            exportToPDF(transactionData, `${currentCategoryName} - ${subKategori} Transactions`);
+            // Use the full dataset, not just the paginated data
+            exportToPDF(window.currentTransactionData || transactionData, `${currentCategoryName} - ${subKategori} Transactions`);
         };
     } else if (exportExcelBtn && exportPdfBtn) {
         // Hide export buttons when there are no transactions
         exportExcelBtn.classList.add('hidden');
         exportPdfBtn.classList.add('hidden');
+    }
+    
+    // Store the current transaction data for later use
+    if (transactionData) {
+        window.currentTransactionData = transactionData;
     }
 }
 

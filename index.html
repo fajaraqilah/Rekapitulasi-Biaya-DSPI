@@ -18,43 +18,26 @@
     <nav class="header">
       <div class="header-content">
         <div class="header-left">
+          <!-- Hamburger menu button for desktop -->
           <button
-            id="sidebarToggle"
-            aria-controls="drawer-navigation"
-            class="sidebar-toggle"
+            id="desktopMenuButton"
+            class="mr-4 text-gray-500 hover:text-gray-700 focus:outline-none hidden md:block"
+            aria-label="Toggle sidebar"
           >
-            <svg
-              aria-hidden="true"
-              class="w-6 h-6"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h6a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
-                clip-rule="evenodd"
-              ></path>
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
             </svg>
-            <svg
-              aria-hidden="true"
-              class="hidden w-6 h-6"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                clip-rule="evenodd"
-              ></path>
-            </svg>
-            <span class="sr-only">Toggle sidebar</span>
           </button>
-          <a href="#" class="flex items-center justify-between mr-4">
-            <span class="self-center text-2xl font-bold whitespace-nowrap text-blue-600 hidden md:block">DSPI Cost Dashboard</span>
-            <span class="self-center text-2xl font-bold whitespace-nowrap text-blue-600 md:hidden">DSPI</span>
-          </a>
+          <!-- Hamburger menu button for mobile -->
+          <button
+            id="mobileMenuButton"
+            class="mr-4 text-gray-500 hover:text-gray-700 focus:outline-none md:hidden"
+            aria-label="Open menu"
+          >
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+          </button>
         </div>
         <div class="header-right">
           <!-- User menu button -->
@@ -81,26 +64,6 @@
               <p class="user-name" id="userNameDropdown">User Name</p>
             </div>
             <div class="user-menu-list">
-              <a href="#" class="user-menu-item">
-                <div class="flex items-center">
-                  <svg class="mr-2 w-4 h-4" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path>
-                    <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"></path>
-                  </svg>
-                  My profile
-                </div>
-              </a>
-              <a href="#" class="user-menu-item">
-                <div class="flex items-center">
-                  <svg class="mr-2 w-4 h-4" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                    <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"></path>
-                  </svg>
-                  Account settings
-                </div>
-              </a>
-            </div>
-            <div class="user-menu-divider"></div>
-            <div class="user-menu-list">
               <button id="logoutBtnHeader" class="user-menu-logout">
                 <div class="flex items-center">
                   <svg class="mr-2 w-4 h-4" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
@@ -114,7 +77,7 @@
         </div>
       </div>
     </nav>
-    
+  
     <div class="main-layout">
         <!-- Sidebar -->
         <aside
@@ -124,7 +87,7 @@
         >
           <div class="logo-container">
             <img src="assets/logo ptpn1.png" alt="Logo" class="logo-image">
-            <span class="logo-text">DSPI Cost Dashboard</span>
+            <span class="logo-text">Rincian Biaya SPI</span>
           </div>
           <div class="sidebar-menu">
             <a
@@ -176,11 +139,9 @@
                 viewBox="0 0 20 20"
                 xmlns="http://www.w3.org/2000/svg"
               >
-                <path
-                  fill-rule="evenodd"
-                  d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4zm-6 3a1 1 0 112 0 1 1 0 01-2 0zm7-1a1 1 0 100 2 1 1 0 000-2z"
-                  clip-rule="evenodd"
-                ></path>
+                <!-- Briefcase icon for Konsultan -->
+                <path fill-rule="evenodd" d="M5 4a3 3 0 00-3 3v6a3 3 0 003 3h10a3 3 0 003-3V7a3 3 0 00-3-3H5zm-1 9V7a1 1 0 011-1h10a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1z" clip-rule="evenodd"></path>
+                <path fill-rule="evenodd" d="M4 5a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1z" clip-rule="evenodd"></path>
               </svg>
               <span class="sidebar-menu-text">Beban Biaya Konsultan</span>
             </a>
@@ -196,11 +157,10 @@
                 viewBox="0 0 20 20"
                 xmlns="http://www.w3.org/2000/svg"
               >
-                <path
-                  fill-rule="evenodd"
-                  d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4zm-6 3a1 1 0 112 0 1 1 0 01-2 0zm7-1a1 1 0 100 2 1 1 0 000-2z"
-                  clip-rule="evenodd"
-                ></path>
+                <!-- Wallet icon for Iuran -->
+                <path d="M5 4a1 1 0 00-1 1v1a1 1 0 001 1h10a1 1 0 001-1V5a1 1 0 00-1-1H5z"></path>
+                <path fill-rule="evenodd" d="M4 8a1 1 0 011-1h10a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1V8zm2 1a1 1 0 000 2h6a1 1 0 100-2H6z" clip-rule="evenodd"></path>
+                <path fill-rule="evenodd" d="M13 11a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1z" clip-rule="evenodd"></path>
               </svg>
               <span class="sidebar-menu-text">Beban Biaya Iuran</span>
             </a>
@@ -216,11 +176,9 @@
                 viewBox="0 0 20 20"
                 xmlns="http://www.w3.org/2000/svg"
               >
-                <path
-                  fill-rule="evenodd"
-                  d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4zm-6 3a1 1 0 112 0 1 1 0 01-2 0zm7-1a1 1 0 100 2 1 1 0 000-2z"
-                  clip-rule="evenodd"
-                ></path>
+                <!-- Users icon for Tamu -->
+                <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12 14a5 5 0 01-5-5 5 5 0 015-5 5 5 0 015 5 5 5 0 01-5 5z"></path>
+                <path fill-rule="evenodd" d="M14 12a3 3 0 00-3-3 3 3 0 00-3 3 3 3 0 003 3 3 3 0 003-3z" clip-rule="evenodd"></path>
               </svg>
               <span class="sidebar-menu-text">Beban Biaya Tamu</span>
             </a>
@@ -236,41 +194,19 @@
                 viewBox="0 0 20 20"
                 xmlns="http://www.w3.org/2000/svg"
               >
-                <path
-                  fill-rule="evenodd"
-                  d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4zm-6 3a1 1 0 112 0 1 1 0 01-2 0zm7-1a1 1 0 100 2 1 1 0 000-2z"
-                  clip-rule="evenodd"
-                ></path>
+                <!-- Presentation icon for Rapat -->
+                <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"></path>
+                <path d="M7 4h6v2H7V4z"></path>
               </svg>
               <span class="sidebar-menu-text">Beban Biaya Rapat</span>
             </a>
           </div>
           <div class="sidebar-menu border-t border-gray-200 pt-2 mt-2">
-            <a
-              href="#"
-              class="sidebar-menu-item"
-            >
-              <svg
-                aria-hidden="true"
-                class="sidebar-menu-icon"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"></path>
-                <path
-                  fill-rule="evenodd"
-                  d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z"
-                  clip-rule="evenodd"
-                ></path>
-              </svg>
-              <span class="sidebar-menu-text">Documentation</span>
-            </a>
           </div>
         </aside>
             
         <!-- Overlay for mobile sidebar -->
-        <div id="sidebarOverlay" class="sidebar-overlay hidden"></div>
+        <div id="sidebarOverlay" class="sidebar-overlay"></div>
 
         <!-- Main Content Area -->
         <main id="content" class="main-content">
@@ -284,6 +220,7 @@
     <script type="module">
         // Import Supabase client
         import { supabase } from './js/supabaseClient.js';
+        import { initMobileMenu, initDesktopMenu } from './js/utils.js';
         
         // Check if user is logged in
         const { data: { session } } = await supabase.auth.getSession();
@@ -314,10 +251,15 @@
             if (userInitialElement) userInitialElement.innerHTML = `<span>${userInitial}</span>`;
         }
         
+        // Initialize mobile menu
+        initMobileMenu();
+        
+        // Initialize desktop menu
+        initDesktopMenu();
+        
         // DOM Elements with null checks
         const content = document.getElementById('content');
         const sidebar = document.getElementById('sidebar');
-        const sidebarToggle = document.getElementById('sidebarToggle');
         const sidebarOverlay = document.getElementById('sidebarOverlay');
         const menuItems = document.querySelectorAll('.sidebar-menu-item');
         const logoutBtnHeader = document.getElementById('logoutBtnHeader');
@@ -335,59 +277,11 @@
             });
         }
         
-        // Toggle sidebar on mobile and desktop
-        if (sidebarToggle && sidebar) {
-            sidebarToggle.addEventListener('click', (e) => {
-                // Check if this is a mobile view
-                if (window.innerWidth < 768) {
-                    // Mobile behavior - toggle sidebar visibility
-                    sidebar.classList.toggle('visible');
-                    if (sidebarOverlay) {
-                        sidebarOverlay.classList.toggle('visible');
-                    }
-                } else {
-                    // Desktop behavior - toggle sidebar collapse/expand
-                    sidebar.classList.toggle('collapsed');
-                    content.classList.toggle('expanded');
-                    document.querySelector('.header').classList.toggle('expanded');
-                    
-                    // Toggle icon visibility
-                    const openIcon = sidebarToggle.querySelector('svg:not(.hidden)');
-                    const closeIcon = sidebarToggle.querySelector('svg.hidden');
-                    
-                    if (openIcon && closeIcon) {
-                        openIcon.classList.add('hidden');
-                        closeIcon.classList.remove('hidden');
-                    } else if (openIcon) {
-                        openIcon.classList.add('hidden');
-                        // Find the hidden icon and show it
-                        const hiddenIcon = sidebarToggle.querySelector('svg.hidden');
-                        if (hiddenIcon) {
-                            hiddenIcon.classList.remove('hidden');
-                        }
-                    } else {
-                        // Find the visible icon and hide it
-                        const visibleIcon = sidebarToggle.querySelector('svg:not(.hidden)');
-                        if (visibleIcon) {
-                            visibleIcon.classList.add('hidden');
-                            // Find the hidden icon and show it
-                            const hiddenIcon = sidebarToggle.querySelector('svg.hidden');
-                            if (hiddenIcon) {
-                                hiddenIcon.classList.remove('hidden');
-                            }
-                        }
-                    }
-                }
-            });
-            
-            // Close sidebar when overlay is clicked (mobile only)
-            if (sidebarOverlay) {
-                sidebarOverlay.addEventListener('click', () => {
-                    sidebar.classList.remove('visible');
-                    sidebarOverlay.classList.remove('visible');
-                });
-            }
-        }
+        // Toggle sidebar on mobile and desktop - REMOVED as per task requirements
+        // The sidebar toggle functionality will be reimplemented in the new location
+        
+        // Close sidebar when overlay is clicked (mobile only)
+        // REMOVED: This functionality is now handled by the mobile menu in utils.js
         
         // Toggle user dropdown menu (with null checks)
         if (userMenuButton && dropdown) {
@@ -404,32 +298,6 @@
             });
         }
         
-        // Handle sidebar item clicks
-        menuItems.forEach(item => {
-            item.addEventListener('click', async (e) => {
-                e.preventDefault();
-                const moduleItem = e.target.closest('.sidebar-menu-item');
-                if (!moduleItem || !moduleItem.dataset.module) {
-                    console.error('Module not found in clicked item');
-                    return;
-                }
-                
-                const module = moduleItem.dataset.module;
-                
-                // Set active menu item
-                setActiveMenuItem(module);
-                
-                // Close sidebar on mobile after selection
-                if (window.innerWidth < 768 && sidebar && sidebarOverlay) {
-                    sidebar.classList.remove('visible');
-                    sidebarOverlay.classList.remove('visible');
-                }
-                
-                // Load module content
-                await loadModuleContent(module);
-            });
-        });
-
         // Handle logout from header button
         if (logoutBtnHeader) {
             logoutBtnHeader.addEventListener('click', async (e) => {
@@ -480,35 +348,74 @@
         }
         
         // Set initial state based on window size
-        if (window.innerWidth < 768) {
-            // Mobile initial state
-            if (sidebar) {
-                sidebar.classList.remove('collapsed');
-                content.classList.remove('expanded');
-                document.querySelector('.header').classList.remove('expanded');
+        function setInitialState() {
+            if (window.innerWidth < 768) {
+                // Mobile initial state - sidebar hidden
+                if (sidebar) {
+                    sidebar.classList.remove('translate-x-0');
+                    sidebar.classList.add('-translate-x-full');
+                }
+            } else {
+                // Desktop initial state - sidebar visible
+                if (sidebar) {
+                    sidebar.classList.remove('-translate-x-full');
+                    sidebar.classList.add('translate-x-0');
+                }
             }
         }
+        
+        setInitialState();
 
         // Handle window resize
-        window.addEventListener('resize', () => {
-            if (window.innerWidth >= 768) {
-                // On desktop, ensure sidebar is visible and remove mobile classes
+window.addEventListener('resize', () => {
+    if (window.innerWidth < 1024) { 
+        // Untuk mobile & tablet
+        if (sidebar) {
+            sidebar.classList.add('-translate-x-full');
+            sidebar.classList.remove('translate-x-0');
+        }
+        if (sidebarOverlay) {
+            sidebarOverlay.classList.remove('visible');
+        }
+    } else {
+                // On desktop, ensure sidebar is visible
                 if (sidebar) {
-                    sidebar.classList.remove('hidden', 'visible');
+                    sidebar.classList.remove('-translate-x-full');
+                    sidebar.classList.add('translate-x-0');
                 }
                 if (sidebarOverlay) {
                     sidebarOverlay.classList.remove('visible');
                 }
-            } else {
-                // On mobile, ensure proper initial state
-                if (sidebar) {
-                    sidebar.classList.remove('collapsed');
-                    content.classList.remove('expanded');
-                    document.querySelector('.header').classList.remove('expanded');
-                }
             }
         });
-
+        
+        // Handle sidebar item clicks
+        menuItems.forEach(item => {
+            item.addEventListener('click', async (e) => {
+                e.preventDefault();
+                const moduleItem = e.target.closest('.sidebar-menu-item');
+                if (!moduleItem || !moduleItem.dataset.module) {
+                    console.error('Module not found in clicked item');
+                    return;
+                }
+                
+                const module = moduleItem.dataset.module;
+                
+                // Set active menu item
+                setActiveMenuItem(module);
+                
+                // Close sidebar on mobile after selection
+                if (window.innerWidth < 768 && sidebar && sidebarOverlay) {
+                    sidebar.classList.remove('translate-x-0');
+                    sidebar.classList.add('-translate-x-full');
+                    sidebarOverlay.classList.remove('visible');
+                }
+                
+                // Load module content
+                await loadModuleContent(module);
+            });
+        });
+        
         // Load BPD content by default when page loads
         try {
             setActiveMenuItem('bpd');

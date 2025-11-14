@@ -1135,7 +1135,7 @@ body, html {
     
     /* Mobile sidebar */
     .sidebar {
-        transform: translateX(-100%);
+        transform: translateX(-100%); /* Hidden on mobile */
         padding-top: 4rem;
     }
     
@@ -1230,6 +1230,14 @@ body, html {
     transition: all 0.3s ease;
     padding-top: 4rem; /* Height of header */
     display: block; /* Ensure sidebar is displayed */
+    transform: translateX(-100%); /* Hidden by default */
+}
+
+/* Show sidebar on desktop */
+@media (min-width: 769px) {
+    .sidebar {
+        transform: translateX(0); /* Visible on desktop */
+    }
 }
 
 .sidebar.collapsed {
@@ -1253,14 +1261,17 @@ body, html {
     width: calc(100% - 4rem); /* Ensure proper width calculation when collapsed */
 }
 
-
-
 /* Overlay for mobile sidebar */
 .sidebar-overlay {
     position: fixed;
     inset: 0;
     background-color: rgba(0, 0, 0, 0.5);
     z-index: 30;
+    display: none; /* Hidden by default */
+}
+
+.sidebar-overlay.visible {
+    display: block; /* Visible when active */
 }
 
 /* Hide sidebar and overlay by default */
@@ -1787,28 +1798,103 @@ body, html {
     margin-right: 0;
 }
 
-/* Logo styles */
 .logo-container {
     display: flex;
-    align-items: center;
+    flex-direction: column; /* 👈 INI yang membuat teks ke bawah */
+    align-items: center;    /* center horizontal */
+    justify-content: center;
     padding: 1rem;
     border-bottom: 1px solid #e5e7eb;
+    text-align: center;
 }
 
 .logo-image {
-    height: 2.5rem;
+    height: 5rem;
     width: auto;
     margin-right: 0.75rem;
     flex-shrink: 0;
 }
 
 .logo-text {
-    font-size: 1.25rem;
+    font-size: 1rem;
+    margin-top: 0.5rem;
     font-weight: 700;
     color: #2563eb;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+/* Responsive adjustments for logo text */
+@media (max-width: 1024px) {
+    .logo-text {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .logo-text {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .logo-text {
+        font-size: 0.875rem;
+    }
+}
+
+/* Show sidebar toggle button on all views */
+@media (max-width: 1023px) {
+    .sidebar-toggle {
+        display: block;
+    }
+}
+
+@media (min-width: 1024px) {
+    .sidebar-toggle {
+        display: block;
+    }
+}
+
+/* Adjust sidebar visibility on tablet views */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .sidebar {
+        transform: translateX(0);
+    }
+}
+
+/* Responsive adjustments for logo image */
+@media (max-width: 768px) {
+    .logo-image {
+        height: 5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .logo-image {
+        height: 3rem;
+        margin-right: 0.5rem;
+    }
+    
+    .logo-container {
+        padding: 0.75rem;
+    }
+}
+
+/* Adjustments for very small screens */
+@media (max-width: 375px) {
+    .logo-text {
+        font-size: 0.75rem;
+    }
+    
+    .logo-image {
+        height: 3rem;
+    }
+    
+    .logo-container {
+        padding: 0.5rem;
+    }
 }
 
 .sidebar.collapsed .logo-text {
@@ -1822,7 +1908,7 @@ body, html {
 
 .sidebar.collapsed .logo-image {
     margin-right: 0;
-    height: 2rem;
+    height: 3rem;
 }
 
 /* User menu button */
@@ -1847,4 +1933,247 @@ body, html {
     color: #2563eb;
     background-color: #dbeafe;
     border-radius: 9999px;
+}
+
+/* Search input styles */
+#searchInput {
+    padding: 0.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    width: 200px;
+}
+
+#searchInput:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Add Data Form Container */
+#addDataFormContainer {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    background-color: #f9fafb;
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 768px) {
+    /* Responsive adjustments for search input */
+    #searchInput {
+        width: 120px;
+        font-size: 0.75rem;
+        padding: 0.25rem;
+    }
+    
+    #bebanBiayaSearchInput {
+        width: 120px;
+        font-size: 0.75rem;
+        padding: 0.25rem;
+    }
+    
+    .transactions-table-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+    }
+    
+    .transactions-table-header > div {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        justify-content: space-evenly;
+    }
+    
+    /* Adjustments for 375px screens */
+    @media (max-width: 375px) {
+        .transactions-table-header > div {
+            gap: 0.25rem;
+        }
+        
+        .export-buttons {
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+        
+        .export-button {
+            padding: 0.125rem 0.5rem;
+            font-size: 0.75rem;
+        }
+        
+        #addDataBtn {
+            padding: 0.125rem 0.5rem;
+            font-size: 0.75rem;
+        }
+        
+        /* Adjust the space-x-2 gap for 375px screens */
+        .space-x-2 {
+            --tw-space-x-reverse: 0;
+            margin-right: calc(0.25rem * var(--tw-space-x-reverse));
+            margin-left: calc(0.25rem * calc(1 - var(--tw-space-x-reverse)));
+        }
+        
+        /* Make search input smaller on very small screens */
+        #searchInput, #bebanBiayaSearchInput {
+            width: 100px;
+            font-size: 0.7rem;
+            padding: 0.2rem;
+        }
+    }
+    
+    /* Responsive adjustments for add data form */
+    #addDataFormContainer {
+        padding: 0.75rem;
+    }
+    
+    #addDataFormContainer .grid {
+        grid-template-columns: 1fr;
+    }
+    
+    /* Pagination responsive adjustments */
+    .table-pagination {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+    }
+    
+    .pagination-buttons {
+        justify-content: center;
+    }
+    
+    .entries-info {
+        text-align: center;
+    }
+}
+
+/* Additional responsive adjustments for very small screens */
+@media (max-width: 480px) {
+    .table-pagination .pagination-buttons button {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+    
+    .table-pagination .pagination-buttons span {
+        padding: 0.25rem 0.25rem;
+        font-size: 0.875rem;
+    }
+}
+
+/* Make sure pagination works on all table containers */
+.transactions-table-container .flex.items-center.gap-2 {
+    flex-wrap: wrap;
+}
+
+.transactions-table-container .flex.items-center.gap-2 select {
+    min-width: 80px;
+}
+
+/* Mobile and desktop icon visibility */
+.mobile-icon {
+    display: none;
+}
+
+.desktop-icon {
+    display: block;
+}
+
+@media (max-width: 1023px) {
+    .mobile-icon {
+        display: block;
+    }
+    
+    .desktop-icon {
+        display: none;
+    }
+}
+
+/* Pagination styles */
+.table-pagination {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1rem;
+    gap: 1rem;
+}
+
+.entries-info {
+    text-align: left;
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+.pagination-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.pagination-buttons button {
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid #d1d5db;
+    background-color: #ffffff;
+    color: #374151;
+    transition: all 0.2s ease;
+}
+
+.pagination-buttons button:hover:not(:disabled) {
+    background-color: #f9fafb;
+    border-color: #9ca3af;
+}
+
+.pagination-buttons button:disabled {
+    background-color: #f3f4f6;
+    color: #9ca3af;
+    cursor: not-allowed;
+}
+
+.pagination-buttons button.bg-blue-500 {
+    background-color: #3b82f6;
+    color: #ffffff;
+    border-color: #3b82f6;
+}
+
+.pagination-buttons button.bg-blue-500:hover {
+    background-color: #2563eb;
+    border-color: #2563eb;
+}
+
+.pagination-buttons span {
+    padding: 0.5rem 0.25rem;
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 768px) {
+    .table-pagination .pagination-buttons button {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+    
+    .table-pagination .pagination-buttons span {
+        padding: 0.25rem 0.25rem;
+        font-size: 0.875rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .table-pagination .pagination-buttons button {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+    }
+    
+    .table-pagination .pagination-buttons span {
+        padding: 0.25rem 0.25rem;
+        font-size: 0.75rem;
+    }
 }
