@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 /* Custom styles for DSPI Dashboard */
 
 /* Reset default body and html styles */
@@ -1041,6 +1043,8 @@ body, html {
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
     border: 1px solid #e5e7eb;
     z-index: 50;
+    overflow: visible; /* Ensure borders are visible */
+    box-sizing: border-box; /* Include border in element's total width and height */
 }
 
 .user-menu-dropdown.hidden {
@@ -1069,6 +1073,7 @@ body, html {
 
 .user-menu-list {
     padding: 0.25rem 0;
+    margin-bottom: 0.125rem; /* Add small margin to ensure bottom border visibility */
 }
 
 .user-menu-item {
@@ -1231,12 +1236,20 @@ body, html {
     padding-top: 4rem; /* Height of header */
     display: block; /* Ensure sidebar is displayed */
     transform: translateX(-100%); /* Hidden by default */
+    max-width: 100vw;
 }
 
 /* Show sidebar on desktop */
 @media (min-width: 769px) {
     .sidebar {
         transform: translateX(0); /* Visible on desktop */
+    }
+}
+
+/* Hide sidebar on iPad Mini resolution (768x1024) */
+@media (width: 768px) and (height: 1024px) {
+    .sidebar {
+        transform: translateX(-100%);
     }
 }
 
@@ -1266,7 +1279,7 @@ body, html {
     position: fixed;
     inset: 0;
     background-color: rgba(0, 0, 0, 0.5);
-    z-index: 30;
+    z-index: 45;
     display: none; /* Hidden by default */
 }
 
@@ -1277,6 +1290,10 @@ body, html {
 /* Hide sidebar and overlay by default */
 .sidebar.hidden {
     transform: translateX(-100%);
+}
+
+.sidebar.visible {
+    transform: translateX(0);
 }
 
 .sidebar-overlay.hidden {
@@ -1664,10 +1681,26 @@ body, html {
     /* Mobile sidebar */
     .sidebar {
         transform: translateX(-100%);
+        z-index: 50;
+        width: 16rem;
+        max-width: 100vw;
     }
     
     .sidebar.visible {
         transform: translateX(0);
+    }
+    
+    /* Ensure sidebar menu text is visible on mobile */
+    .sidebar .sidebar-menu-text {
+        display: inline-block !important;
+    }
+    
+    .sidebar .sidebar-menu-item {
+        justify-content: flex-start !important;
+    }
+    
+    .sidebar .sidebar-menu-icon {
+        margin-right: 0.75rem !important;
     }
     
     .main-content {
@@ -1854,6 +1887,20 @@ body, html {
 @media (min-width: 1024px) {
     .sidebar-toggle {
         display: block;
+    }
+}
+
+/* Ensure mobile menu button is visible on mobile */
+@media (max-width: 767px) {
+    #mobileMenuButton {
+        display: block !important;
+    }
+}
+
+/* Ensure desktop menu button is visible on desktop */
+@media (min-width: 768px) {
+    #desktopMenuButton {
+        display: block !important;
     }
 }
 

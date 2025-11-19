@@ -1,124 +1,22 @@
-# ✅ **Prompt Qoder: Add “Show Entries” Pagination to All Tables**
+I want to redesign the login page to improve its appearance and user experience. The current page is functional but lacks visual branding and a polished layout.
 
-**Task: Add a “Show Entries” dropdown and pagination system to every data table (BPD table, Beban Biaya table, and any other tables).**
+Please implement the following changes:
 
-### **Requirements:**
+1.  **Add PTPN 1 Logo:**
+    *   Use the logo file `logo ptpn1.png` located in the `assets` folder (`C:\Users\ASUS\Documents\rincian-biaya-spi\assets\logo ptpn1.png`).
+    *   Display the logo prominently on the login page, ideally centered above the login form or in a dedicated branding area.
+    *   Ensure the logo is appropriately sized and responsive (looks good on different screen sizes).
 
-1. **Add a “Show Entries” selector** above each table with options:
+2.  **Improve Overall Layout and Styling:**
+    *   Create a more modern and visually appealing layout for the login form itself (email, password fields, login button).
+    *   Use Tailwind CSS classes to style the form container (e.g., add padding, background color, border radius, subtle shadow, center it on the page).
+    *   Enhance the styling of the input fields (e.g., focus states, padding, border styles).
+    *   Improve the styling of the login button (e.g., color, hover effects, padding).
+    *   Ensure the layout is responsive and looks good on mobile, tablet, and desktop screens.
+    *   Consider adding subtle background elements or a background color/image if appropriate, but keep the focus on the login form.
 
-   * 10
-   * 25
-   * 50
-   * 100
-   * All
+3.  **Maintain Functionality:**
+    *   Ensure all existing login functionality remains intact.
+    *   The form submission and authentication process should work exactly as before.
 
-   Example UI:
-
-   ```
-   Show [ 10 ▼ ] entries
-   ```
-
-2. When the user changes the selected value:
-
-   * The table must re-render showing **only that number of rows**.
-   * If “All” is selected, show all table rows.
-
-3. Implement **client-side pagination** (no need to fetch again from Supabase):
-
-   * Keep the full dataset in memory.
-   * Slice the data depending on the chosen entry count.
-
-4. Add **Next / Previous** pagination buttons under the table:
-
-   * “Prev” (disabled on first page)
-   * Page number
-   * “Next” (disabled on last page)
-
-   Example:
-
-   ```
-   Showing 1–10 of 85 entries  
-   [Prev]  1 2 3 4 5  [Next]
-   ```
-
-5. Ensure it works for **all tables** in the workspace:
-
-   * BPD table (`transactions-table-container`)
-   * Beban Biaya tables
-   * Any modular table loaded through JS
-
-6. The feature must be **fully responsive** (mobile-friendly).
-
-   * On small screens, dropdown and pagination should stack vertically.
-
-7. Do not break existing features:
-
-   * Search bar
-   * Export Excel / PDF
-   * Add Data button
-   * Sorting (if any)
-   * Real-time updates from Supabase
-
-8. Implement reusable code:
-
-   * Create a helper function like:
-
-     ```js
-     function applyPagination(tableId, dataArray) { ... }
-     ```
-   * This function should:
-
-     * Handle dropdown changes
-     * Handle slicing
-     * Handle pagination navigation
-     * Re-render the table body cleanly
-
-9. Insert the dropdown **above the table**, aligned to the left:
-
-   * Search box stays right-aligned
-   * Export buttons stay right-aligned
-   * Use Flexbox with wrapping for responsiveness
-
-10. Make the UI clean using Tailwind classes.
-
----
-
-### **Example Implementation Style (Qoder may follow this structure):**
-
-* Add this HTML snippet above each table:
-
-```html
-<div class="flex flex-wrap items-center justify-between mb-4 gap-4">
-  <div class="flex items-center gap-2">
-    <label class="text-sm">Show</label>
-    <select id="entriesSelect" class="border rounded px-2 py-1">
-        <option value="10">10</option>
-        <option value="25">25</option>
-        <option value="50">50</option>
-        <option value="100">100</option>
-        <option value="all">All</option>
-    </select>
-    <span class="text-sm">entries</span>
-  </div>
-</div>
-```
-
-* Below the table, Qoder should generate pagination controls:
-
-```html
-<div id="tablePagination" class="flex justify-between items-center mt-4"></div>
-```
-
----
-
-### **Deliverables Qoder Should Produce:**
-
-✔ Update HTML structure for all tables
-✔ Implement JS pagination logic
-✔ Add dropdown selector
-✔ Add next/prev buttons
-✔ Add “Showing X of Y entries” text
-✔ Ensure compatibility with existing sorting/search/export features
-✔ Make it responsive with Tailwind
-✔ Apply automatically to all data tables in the system
-
+The goal is to create a professional-looking login page that incorporates the PTPN 1 branding and provides a better first impression for users.

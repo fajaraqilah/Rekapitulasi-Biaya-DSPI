@@ -1,4 +1,7 @@
 // Utility functions for the DSPI dashboard
+import * as XLSX from 'xlsx';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
 
 // Format currency in IDR
 export function formatCurrency(amount) {
@@ -33,7 +36,6 @@ export function exportToExcel(data, filename) {
 
 // Export to PDF
 export function exportToPDF(data, title) {
-    const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     
     // Add title
@@ -48,18 +50,50 @@ export function exportToPDF(data, title) {
         // Get rows
         const rows = data.map(obj => headers.map(header => obj[header]));
         
-        // Add table
-        doc.autoTable({
-            head: [headers],
-            body: rows,
-            startY: 30,
-            styles: {
-                fontSize: 8
-            },
-            headStyles: {
-                fillColor: [22, 160, 133]
+        // Add table with improved formatting
+doc.autoTable({
+    head: [headers], // Filtered headers
+    body: rows,      // Filtered rows
+    startY: 30,
+    styles: {
+        fontSize: 8,
+        cellPadding: 2,
+        // Use columnStyles for all columns instead of fixed widths
+        columnStyles: {
+            '*': { // Apply to all columns
+                cellPadding: 2,
+                minCellWidth: 15, // Minimum width if needed
+                // cellWidth: 'auto' is default, let AutoTable calculate
             }
-        });
+        }
+    },
+    headStyles: {
+        fillColor: [22, 160, 133],
+        textColor: [255, 255, 255],
+        fontStyle: 'bold',
+        halign: 'center', // Apply alignment here too, potentially redundant with didParseCell
+        valign: 'middle'
+    },
+    bodyStyles: {
+        textColor: [0, 0, 0],
+         halign: 'center' // Optional: center align body text if desired
+    },
+    alternateRowStyles: {
+        fillColor: [245, 245, 245]
+    },
+    // Remove the specific index columnStyles
+    // columnStyles: { ... },
+    didParseCell: function(data) {
+        // Keep header alignment
+        if (data.section === 'head') {
+            data.cell.styles.halign = 'center';
+            data.cell.styles.valign = 'middle';
+        }
+    },
+    margin: { top: 30 },
+    // Optional: Add tableWidth for better control
+    // tableWidth: 'wrap', // or 'auto' or a specific value like 180
+});
     }
     
     // Save the PDF
@@ -103,6 +137,30 @@ export async function isAdmin(supabase) {
     }
 }
 
+// Get current user role
+export async function getUserRole(supabase) {
+    try {
+        // Get current user
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) return null;
+        
+        // Get user profile
+        const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single();
+            
+        if (error) throw error;
+        
+        return profile.role;
+    } catch (error) {
+        console.error('Error getting user role:', error);
+        return null;
+    }
+}
+
 // Check if user is authenticated
 export async function isAuthenticated(supabase) {
     const { data: { session } } = await supabase.auth.getSession();
@@ -131,8 +189,8 @@ export function initMobileMenu() {
     // Toggle mobile menu
     mobileMenuButton.addEventListener('click', () => {
         // Toggle sidebar visibility
-        sidebar.classList.toggle('translate-x-0');
-        sidebar.classList.toggle('-translate-x-full');
+        sidebar.classList.toggle('hidden');
+        sidebar.classList.toggle('visible');
         
         // Toggle overlay visibility
         sidebarOverlay.classList.toggle('visible');
@@ -140,16 +198,22 @@ export function initMobileMenu() {
     
     // Close menu when overlay is clicked
     sidebarOverlay.addEventListener('click', () => {
-        sidebar.classList.remove('translate-x-0');
-        sidebar.classList.add('-translate-x-full');
+        sidebar.classList.remove('visible');
+        sidebar.classList.add('hidden');
         sidebarOverlay.classList.remove('visible');
     });
     
     // Close menu when window is resized to desktop size
     window.addEventListener('resize', () => {
-        if (window.innerWidth >= 768) {
-            sidebar.classList.remove('-translate-x-full');
-            sidebar.classList.add('translate-x-0');
+        if (window.innerWidth >= 769) {
+            sidebar.classList.remove('hidden');
+            sidebar.classList.add('visible');
+            sidebarOverlay.classList.remove('visible');
+        }
+        // Handle iPad Mini resolution (768x1024) - treat as tablet
+        if (window.innerWidth === 768) {
+            sidebar.classList.remove('visible');
+            sidebar.classList.add('hidden');
             sidebarOverlay.classList.remove('visible');
         }
     });

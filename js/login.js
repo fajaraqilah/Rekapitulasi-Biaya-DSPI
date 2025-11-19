@@ -1,14 +1,20 @@
 import { supabase } from './supabaseClient.js';
+import { isAdmin } from './utils.js';
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     const loginForm = document.getElementById('loginForm');
     const errorMessage = document.getElementById('errorMessage');
     
     // Check if user is already logged in
-    const session = localStorage.getItem('supabase.auth.token');
+    const { data: { session } } = await supabase.auth.getSession();
     if (session) {
-        // Redirect to main dashboard
-        window.location.href = './index.html';
+        // Check user role and redirect accordingly
+        const admin = await isAdmin(supabase);
+        if (admin) {
+            window.location.href = './admin.html';
+        } else {
+            window.location.href = './index.html';
+        }
     }
     
     loginForm.addEventListener('submit', async (e) => {
@@ -29,11 +35,13 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (error) throw error;
             
-            // Store session data
-            localStorage.setItem('user', JSON.stringify(data.user));
-            
-            // Redirect to main dashboard
-            window.location.href = './index.html';
+            // Check user role and redirect accordingly
+            const admin = await isAdmin(supabase);
+            if (admin) {
+                window.location.href = './admin.html';
+            } else {
+                window.location.href = './index.html';
+            }
         } catch (error) {
             console.error('Login error:', error);
             errorMessage.textContent = error.message;

@@ -3,15 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DSPI Internal Cost Report Dashboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    <title>Dashboard Rincian Biaya DSPI</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image/png" href="public/favicon.png">
 </head>
 <body class="bg-gray-50">
     <!-- Header -->
@@ -352,14 +346,14 @@
             if (window.innerWidth < 768) {
                 // Mobile initial state - sidebar hidden
                 if (sidebar) {
-                    sidebar.classList.remove('translate-x-0');
-                    sidebar.classList.add('-translate-x-full');
+                    sidebar.classList.remove('visible');
+                    sidebar.classList.add('hidden');
                 }
             } else {
                 // Desktop initial state - sidebar visible
                 if (sidebar) {
-                    sidebar.classList.remove('-translate-x-full');
-                    sidebar.classList.add('translate-x-0');
+                    sidebar.classList.remove('hidden');
+                    sidebar.classList.add('visible');
                 }
             }
         }
@@ -371,8 +365,8 @@ window.addEventListener('resize', () => {
     if (window.innerWidth < 1024) { 
         // Untuk mobile & tablet
         if (sidebar) {
-            sidebar.classList.add('-translate-x-full');
-            sidebar.classList.remove('translate-x-0');
+            sidebar.classList.remove('visible');
+            sidebar.classList.add('hidden');
         }
         if (sidebarOverlay) {
             sidebarOverlay.classList.remove('visible');
@@ -380,8 +374,8 @@ window.addEventListener('resize', () => {
     } else {
                 // On desktop, ensure sidebar is visible
                 if (sidebar) {
-                    sidebar.classList.remove('-translate-x-full');
-                    sidebar.classList.add('translate-x-0');
+                    sidebar.classList.remove('hidden');
+                    sidebar.classList.add('visible');
                 }
                 if (sidebarOverlay) {
                     sidebarOverlay.classList.remove('visible');
@@ -406,8 +400,8 @@ window.addEventListener('resize', () => {
                 
                 // Close sidebar on mobile after selection
                 if (window.innerWidth < 768 && sidebar && sidebarOverlay) {
-                    sidebar.classList.remove('translate-x-0');
-                    sidebar.classList.add('-translate-x-full');
+                    sidebar.classList.remove('visible');
+                    sidebar.classList.add('hidden');
                     sidebarOverlay.classList.remove('visible');
                 }
                 

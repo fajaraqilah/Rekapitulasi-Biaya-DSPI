@@ -1,6 +1,8 @@
 import { supabase } from './supabaseClient.js';
 import { formatCurrency, exportToExcel, exportToPDF } from './utils.js';
-import { applyPagination } from './utils.js';
+import { applyPagination, isAdmin } from './utils.js';
+import Chart from 'chart.js/auto';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 
 // Mapping module names to database categories
 const moduleCategoryMap = {
@@ -18,6 +20,8 @@ let currentCategoryName = null;
 // Function to load Beban Biaya content
 export async function loadBebanBiayaContent(container, module) {
     try {
+        // Check if user is admin
+        const admin = await isAdmin(supabase);
         // Map kategori
         const categoryName = moduleCategoryMap[module] || module;
         
@@ -27,7 +31,7 @@ export async function loadBebanBiayaContent(container, module) {
         currentCategoryName = categoryName;
         
         // Render initial UI with subcategory dropdown
-        renderInitialContent(container, module, categoryName);
+        renderInitialContent(container, module, categoryName, admin);
         
         // Populate subcategory dropdown
         setTimeout(async () => {
@@ -46,7 +50,7 @@ export async function loadBebanBiayaContent(container, module) {
 }
 
 // Function to render initial content with subcategory dropdown
-function renderInitialContent(container, module, categoryName) {
+function renderInitialContent(container, module, categoryName, admin) {
     container.innerHTML = `
         <div class="bpd-container">
             <div class="bpd-header">
@@ -94,6 +98,7 @@ function renderInitialContent(container, module, categoryName) {
             <!-- Summary Cards Container -->
             <div id="summaryCardsContainer"></div>
             
+            ${admin ? `
             <!-- Transaction Form (Admin Only) -->
             <div id="transactionFormContainer" class="card mb-6 hidden">
                 <h3 class="card-header">Add New Transaction</h3>
@@ -124,6 +129,7 @@ function renderInitialContent(container, module, categoryName) {
             <div class="mb-4">
                 <button id="toggleFormBtn" class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 hidden">Add New Transaction</button>
             </div>
+            ` : ''}
             
             <!-- Transactions Table Container -->
             <div id="transactionsTableContainer"></div>
@@ -131,7 +137,7 @@ function renderInitialContent(container, module, categoryName) {
     `;
     
     // Set up initial event listeners
-    setupInitialEventListeners(module, categoryName);
+    setupInitialEventListeners(module, categoryName, admin);
 }
 
 // Function to populate subcategory dropdown
@@ -172,16 +178,18 @@ subKategoriSelect.addEventListener("click", () => {
 }
 
 // Function to set up initial event listeners
-function setupInitialEventListeners(module, categoryName) {
+function setupInitialEventListeners(module, categoryName, admin) {
     // Subcategory dropdown change event
     const subSelect = document.getElementById('subKategoriSelect');
     if (subSelect) {
         subSelect.addEventListener('change', async function() {
             if (this.value) {
-                // Show the "Add Transaction" button immediately when a subcategory is selected
-                const toggleFormBtn = document.getElementById('toggleFormBtn');
-                if (toggleFormBtn) {
-                    toggleFormBtn.classList.remove('hidden');
+                // Show the "Add Transaction" button immediately when a subcategory is selected (only for admin)
+                if (admin) {
+                    const toggleFormBtn = document.getElementById('toggleFormBtn');
+                    if (toggleFormBtn) {
+                        toggleFormBtn.classList.remove('hidden');
+                    }
                 }
                 
                 await loadSubcategoryData(module, categoryName, this.value);
@@ -192,32 +200,37 @@ function setupInitialEventListeners(module, categoryName) {
                 document.getElementById('exportExcel').classList.add('hidden');
                 document.getElementById('exportPDF').classList.add('hidden');
                 
-                // Hide the "Add Transaction" button when no subcategory is selected
-                const toggleFormBtn = document.getElementById('toggleFormBtn');
-                if (toggleFormBtn) {
-                    toggleFormBtn.classList.add('hidden');
+                // Hide the "Add Transaction" button when no subcategory is selected (only for admin)
+                if (admin) {
+                    const toggleFormBtn = document.getElementById('toggleFormBtn');
+                    if (toggleFormBtn) {
+                        toggleFormBtn.classList.add('hidden');
+                    }
                 }
             }
         });
     }
     
-    // Form toggle button
-    const toggleFormBtn = document.getElementById('toggleFormBtn');
-    const formContainer = document.getElementById('transactionFormContainer');
-    
-    if (toggleFormBtn && formContainer) {
-        toggleFormBtn.addEventListener('click', () => {
-            formContainer.classList.toggle('hidden');
-        });
+    // Set up event listeners for admin users only
+    if (admin) {
+        // Form toggle button
+        const toggleFormBtn = document.getElementById('toggleFormBtn');
+        const formContainer = document.getElementById('transactionFormContainer');
         
-        // Form submission
-        const form = document.getElementById('transactionForm');
-        if (form) {
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const selectedSubKategori = document.getElementById('subKategoriSelect').value;
-                await handleFormSubmit(module, categoryName, selectedSubKategori);
+        if (toggleFormBtn && formContainer) {
+            toggleFormBtn.addEventListener('click', () => {
+                formContainer.classList.toggle('hidden');
             });
+            
+            // Form submission
+            const form = document.getElementById('transactionForm');
+            if (form) {
+                form.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const selectedSubKategori = document.getElementById('subKategoriSelect').value;
+                    await handleFormSubmit(module, categoryName, selectedSubKategori);
+                });
+            }
         }
     }
 }
@@ -272,7 +285,7 @@ function updateUIWithSubcategoryData(summaryData, transactionData, subKategori) 
     const summaryCardsContainer = document.getElementById('summaryCardsContainer');
     if (summaryData && summaryCardsContainer) {
         summaryCardsContainer.innerHTML = `
-            <div class="summary-cards">
+           <div class="grid grid-cols-4 md:grid-cols-4 gap-4 mb-4">
                 <div class="summary-card">
                     <h3 class="summary-card-header">Jumlah Awal</h3>
                     <p class="summary-card-value positive">${formatCurrency(summaryData.jumlah_awal)}</p>
@@ -388,13 +401,25 @@ function updateUIWithSubcategoryData(summaryData, transactionData, subKategori) 
         
         // Update export button event listeners
         exportExcelBtn.onclick = () => {
-            // Use the full dataset, not just the paginated data
-            exportToExcel(window.currentTransactionData || transactionData, `${currentModule}_${subKategori}_transactions`);
+            // Filter data to include only required columns
+            const filteredData = (window.currentTransactionData || transactionData).map(record => ({
+                'Tanggal Kegiatan': record.tanggal_kegiatan,
+                'Nama Kegiatan': record.nama_kegiatan,
+                'Jumlah Orang': record.jumlah_orang,
+                'Biaya Kegiatan': record.biaya_kegiatan
+            }));
+            exportToExcel(filteredData, `${currentModule}_${subKategori}_transactions`);
         };
         
         exportPdfBtn.onclick = () => {
-            // Use the full dataset, not just the paginated data
-            exportToPDF(window.currentTransactionData || transactionData, `${currentCategoryName} - ${subKategori} Transactions`);
+            // Filter data to include only required columns
+            const filteredData = (window.currentTransactionData || transactionData).map(record => ({
+                'Tanggal Kegiatan': record.tanggal_kegiatan,
+                'Nama Kegiatan': record.nama_kegiatan,
+                'Jumlah Orang': record.jumlah_orang,
+                'Biaya Kegiatan': record.biaya_kegiatan
+            }));
+            exportToPDF(filteredData, `${currentCategoryName} - ${subKategori} Transactions`);
         };
     } else if (exportExcelBtn && exportPdfBtn) {
         // Hide export buttons when there are no transactions

@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DSPI Internal Cost Report Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image/png" href="public/favicon.png">
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <nav class="header">
+      <div class="header-content">
+        <div class="header-left">
+          <!-- Hamburger menu button for desktop -->
+          <button
+            id="desktopMenuButton"
+            class="mr-4 text-gray-500 hover:text-gray-700 focus:outline-none hidden md:block"
+            aria-label="Toggle sidebar"
+          >
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+          </button>
+          <!-- Hamburger menu button for mobile -->
+          <button
+            id="mobileMenuButton"
+            class="mr-4 text-gray-500 hover:text-gray-700 focus:outline-none md:hidden"
+            aria-label="Open menu"
+          >
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+          </button>
+        </div>
+        <div class="header-right">
+          <!-- User menu button -->
+          <button
+            type="button"
+            class="user-menu-button"
+            id="user-menu-button"
+            aria-expanded="false"
+            data-dropdown-toggle="dropdown"
+          >
+            <span class="sr-only">Open user menu</span>
+            <div class="user-initial" id="userInitial">
+              <span>U</span>
+            </div>
+          </button>
+          <!-- Modal-style Dropdown menu -->
+          <div
+            class="user-menu-dropdown hidden"
+            id="dropdown"
+          >
+            <div class="user-menu-header">
+              <p class="text-sm text-gray-500">Signed in as</p>
+              <p class="user-email" id="userEmailDropdown">user@example.com</p>
+              <p class="user-name" id="userNameDropdown">User Name</p>
+            </div>
+            <div class="user-menu-list">
+              <button id="logoutBtnHeader" class="user-menu-logout">
+                <div class="flex items-center">
+                  <svg class="mr-2 w-4 h-4" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"></path>
+                  </svg>
+                  Sign out
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+  
+    <div class="main-layout">
+        <!-- Sidebar -->
+        <aside
+          class="sidebar"
+          aria-label="Sidenav"
+          id="sidebar"
+        >
+          <div class="logo-container">
+            <img src="assets/logo ptpn1.png" alt="Logo" class="logo-image">
+            <span class="logo-text">Rincian Biaya SPI</span>
+          </div>
+          <div class="sidebar-menu">
+            <a
+              href="#"
+              class="sidebar-menu-item active"
+              data-module="bpd"
+            >
+              <svg
+                aria-hidden="true"
+                class="sidebar-menu-icon"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z"></path>
+                <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z"></path>
+              </svg>
+              <span class="sidebar-menu-text">BPD</span>
+            </a>
+            <a
+              href="#"
+              class="sidebar-menu-item"
+              data-module="audit"
+            >
+              <svg
+                aria-hidden="true"
+                class="sidebar-menu-icon"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 102 0 1 1 0 01-2 0zm7-1a1 1 0 100 2 1 1 0 000-2z"
+                  clip-rule="evenodd"
+                ></path>
+              </svg>
+              <span class="sidebar-menu-text">Beban Biaya Audit</span>
+            </a>
+            <a
+              href="#"
+              class="sidebar-menu-item"
+              data-module="konsultan"
+            >
+              <svg
+                aria-hidden="true"
+                class="sidebar-menu-icon"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <!-- Briefcase icon for Konsultan -->
+                <path fill-rule="evenodd" d="M5 4a3 3 0 00-3 3v6a3 3 0 003 3h10a3 3 0 003-3V7a3 3 0 00-3-3H5zm-1 9V7a1 1 0 011-1h10a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1z" clip-rule="evenodd"></path>
+                <path fill-rule="evenodd" d="M4 5a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1z" clip-rule="evenodd"></path>
+              </svg>
+              <span class="sidebar-menu-text">Beban Biaya Konsultan</span>
+            </a>
+            <a
+              href="#"
+              class="sidebar-menu-item"
+              data-module="iuran"
+            >
+              <svg
+                aria-hidden="true"
+                class="sidebar-menu-icon"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <!-- Wallet icon for Iuran -->
+                <path d="M5 4a1 1 0 00-1 1v1a1 1 0 001 1h10a1 1 0 001-1V5a1 1 0 00-1-1H5z"></path>
+                <path fill-rule="evenodd" d="M4 8a1 1 0 011-1h10a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1V8zm2 1a1 1 0 000 2h6a1 1 0 100-2H6z" clip-rule="evenodd"></path>
+                <path fill-rule="evenodd" d="M13 11a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1z" clip-rule="evenodd"></path>
+              </svg>
+              <span class="sidebar-menu-text">Beban Biaya Iuran</span>
+            </a>
+            <a
+              href="#"
+              class="sidebar-menu-item"
+              data-module="tamu"
+            >
+              <svg
+                aria-hidden="true"
+                class="sidebar-menu-icon"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <!-- Users icon for Tamu -->
+                <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12 14a5 5 0 01-5-5 5 5 0 015-5 5 5 0 015 5 5 5 0 01-5 5z"></path>
+                <path fill-rule="evenodd" d="M14 12a3 3 0 00-3-3 3 3 0 00-3 3 3 3 0 003 3 3 3 0 003-3z" clip-rule="evenodd"></path>
+              </svg>
+              <span class="sidebar-menu-text">Beban Biaya Tamu</span>
+            </a>
+            <a
+              href="#"
+              class="sidebar-menu-item"
+              data-module="rapat"
+            >
+              <svg
+                aria-hidden="true"
+                class="sidebar-menu-icon"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <!-- Presentation icon for Rapat -->
+                <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"></path>
+                <path d="M7 4h6v2H7V4z"></path>
+              </svg>
+              <span class="sidebar-menu-text">Beban Biaya Rapat</span>
+            </a>
+          </div>
+          <div class="sidebar-menu border-t border-gray-200 pt-2 mt-2">
+          </div>
+        </aside>
+            
+        <!-- Overlay for mobile sidebar -->
+        <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+        <!-- Main Content Area -->
+        <main id="content" class="main-content">
+            <div class="text-center py-10">
+                <h2 class="text-2xl font-bold text-gray-800">Dashboard Rincian Biaya DSPI</h2>
+                <p class="text-gray-600 mt-2">Select a category from the sidebar to view reports</p>
+            </div>
+        </main>
+    </div>
+
+    <script type="module">
+        // Import Supabase client
+        import { supabase } from './js/supabaseClient.js';
+        import { initMobileMenu, initDesktopMenu } from './js/utils.js';
+        
+        // Check if user is logged in
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+            // Redirect to login page if not authenticated
+            window.location.href = './login.html';
+        }
+        
+        // Set user info
+        const user = session.user;
+        if (user) {
+            const userName = user.user_metadata?.full_name || user.email.split('@')[0];
+            const userEmail = user.email;
+            const userInitial = user.email.charAt(0).toUpperCase();
+            
+            // Update user info elements (with null checks)
+            const userNameHeader = document.getElementById('userNameHeader');
+            const userEmailHeader = document.getElementById('userEmailHeader');
+            const userNameDropdown = document.getElementById('userNameDropdown');
+            const userEmailDropdown = document.getElementById('userEmailDropdown');
+            const userInitialElement = document.getElementById('userInitial');
+            
+            if (userNameHeader) userNameHeader.textContent = userName;
+            if (userEmailHeader) userEmailHeader.textContent = userEmail;
+            if (userNameDropdown) userNameDropdown.textContent = userName;
+            if (userEmailDropdown) userEmailDropdown.textContent = userEmail;
+            if (userInitialElement) userInitialElement.innerHTML = `<span>${userInitial}</span>`;
+        }
+        
+        // Initialize mobile menu
+        initMobileMenu();
+        
+        // Initialize desktop menu
+        initDesktopMenu();
+        
+        // DOM Elements with null checks
+        const content = document.getElementById('content');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        const menuItems = document.querySelectorAll('.sidebar-menu-item');
+        const logoutBtnHeader = document.getElementById('logoutBtnHeader');
+        const userMenuButton = document.getElementById('user-menu-button');
+        const dropdown = document.getElementById('dropdown');
+        
+        // Set active menu item
+        function setActiveMenuItem(module) {
+            menuItems.forEach(item => {
+                if (item.dataset.module === module) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+        }
+        
+        // Toggle sidebar on mobile and desktop - REMOVED as per task requirements
+        // The sidebar toggle functionality will be reimplemented in the new location
+        
+        // Close sidebar when overlay is clicked (mobile only)
+        // REMOVED: This functionality is now handled by the mobile menu in utils.js
+        
+        // Toggle user dropdown menu (with null checks)
+        if (userMenuButton && dropdown) {
+            userMenuButton.addEventListener('click', (event) => {
+                event.stopPropagation();
+                dropdown.classList.toggle('hidden');
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (event) => {
+                if (!userMenuButton.contains(event.target) && !dropdown.contains(event.target)) {
+                    dropdown.classList.add('hidden');
+                }
+            });
+        }
+        
+        // Handle logout from header button
+        if (logoutBtnHeader) {
+            logoutBtnHeader.addEventListener('click', async (e) => {
+                e.preventDefault();
+                const { error } = await supabase.auth.signOut();
+                if (error) {
+                    console.error('Error logging out:', error);
+                    // Show error message to user
+                    alert('Error logging out. Please try again.');
+                } else {
+                    window.location.href = './login.html';
+                }
+            });
+        }
+        
+        // Function to load module content
+        async function loadModuleContent(module) {
+            // Check if content element exists
+            if (!content) {
+                console.error('Content element not found');
+                return;
+            }
+            
+            content.innerHTML = '<div class="text-center py-10"><p class="text-gray-500">Loading...</p></div>';
+            
+            try {
+                if (module === 'bpd') {
+                    // Dynamically import BPD module
+                    const bpdModule = await import('./js/bpd.js');
+                    if (bpdModule && typeof bpdModule.loadBPDContent === 'function') {
+                        await bpdModule.loadBPDContent(content);
+                    } else {
+                        throw new Error('BPD module or loadBPDContent function not found');
+                    }
+                } else {
+                    // Dynamically import Beban Biaya module
+                    const bebanBiayaModule = await import('./js/bebanBiaya.js');
+                    if (bebanBiayaModule && typeof bebanBiayaModule.loadBebanBiayaContent === 'function') {
+                        await bebanBiayaModule.loadBebanBiayaContent(content, module);
+                    } else {
+                        throw new Error('Beban Biaya module or loadBebanBiayaContent function not found');
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading module:', error);
+                content.innerHTML = '<div class="text-center py-10"><p class="text-red-500">Error loading content. Please try again.</p></div>';
+            }
+        }
+        
+        // Set initial state based on window size
+        function setInitialState() {
+            if (window.innerWidth < 768) {
+                // Mobile initial state - sidebar hidden
+                if (sidebar) {
+                    sidebar.classList.remove('visible');
+                    sidebar.classList.add('hidden');
+                }
+            } else {
+                // Desktop initial state - sidebar visible
+                if (sidebar) {
+                    sidebar.classList.remove('hidden');
+                    sidebar.classList.add('visible');
+                }
+            }
+        }
+        
+        setInitialState();
+
+        // Handle window resize
+window.addEventListener('resize', () => {
+    if (window.innerWidth < 1024) { 
+        // Untuk mobile & tablet
+        if (sidebar) {
+            sidebar.classList.remove('visible');
+            sidebar.classList.add('hidden');
+        }
+        if (sidebarOverlay) {
+            sidebarOverlay.classList.remove('visible');
+        }
+    } else {
+                // On desktop, ensure sidebar is visible
+                if (sidebar) {
+                    sidebar.classList.remove('hidden');
+                    sidebar.classList.add('visible');
+                }
+                if (sidebarOverlay) {
+                    sidebarOverlay.classList.remove('visible');
+                }
+            }
+        });
+        
+        // Handle sidebar item clicks
+        menuItems.forEach(item => {
+            item.addEventListener('click', async (e) => {
+                e.preventDefault();
+                const moduleItem = e.target.closest('.sidebar-menu-item');
+                if (!moduleItem || !moduleItem.dataset.module) {
+                    console.error('Module not found in clicked item');
+                    return;
+                }
+                
+                const module = moduleItem.dataset.module;
+                
+                // Set active menu item
+                setActiveMenuItem(module);
+                
+                // Close sidebar on mobile after selection
+                if (window.innerWidth < 768 && sidebar && sidebarOverlay) {
+                    sidebar.classList.remove('visible');
+                    sidebar.classList.add('hidden');
+                    sidebarOverlay.classList.remove('visible');
+                }
+                
+                // Load module content
+                await loadModuleContent(module);
+            });
+        });
+        
+        // Load BPD content by default when page loads
+        try {
+            setActiveMenuItem('bpd');
+            await loadModuleContent('bpd');
+        } catch (error) {
+            console.error('Error loading initial BPD content:', error);
+            if (content) {
+                content.innerHTML = '<div class="text-center py-10"><p class="text-red-500">Error loading initial content. Please refresh the page.</p></div>';
+            }
+        }
+    </script>
+    
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+</body>
+</html>

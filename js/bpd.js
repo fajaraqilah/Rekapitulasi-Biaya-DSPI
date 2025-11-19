@@ -1,6 +1,8 @@
 import { supabase } from './supabaseClient.js';
 import { formatCurrency, exportToExcel, exportToPDF } from './utils.js';
-import { applyPagination } from './utils.js';
+import { applyPagination, isAdmin } from './utils.js';
+import Chart from 'chart.js/auto';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 
 let currentBPDData = [];
 let currentChartData = [];
@@ -104,6 +106,8 @@ async function fetchBpdData() {
 // Function to load BPD content
 export async function loadBPDContent(container) {
     try {
+        // Check if user is admin
+        const admin = await isAdmin(supabase);
         // Clear any existing refresh interval
         if (refreshInterval) {
             clearInterval(refreshInterval);
@@ -135,7 +139,7 @@ export async function loadBPDContent(container) {
                         <canvas id="bpdChart"></canvas>
                     </div>
                 </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-5">
+                    <div class="grid grid-cols-2 md:grid-cols-2 gap-2 mb-5">
 
                     <!-- TOP 3 -->
                     <div class="summary-card">
@@ -187,10 +191,11 @@ export async function loadBPDContent(container) {
                             <input type="text" id="searchInput" class="form-control border rounded px-2 py-1" placeholder="Cari data..." style="width: 300px;">
                             <button id="exportExcelTable" class="export-button excel">Excel</button>
                             <button id="exportPDFTable" class="export-button pdf">PDF</button>
-                            <button id="addDataBtn" class="add-transaction-button">+ Tambah Data</button>
+                            ${admin ? '<button id="addDataBtn" class="add-transaction-button">+ Tambah Data</button>' : ''}
                         </div>
                     </div>
                     <!-- Add Data Form (hidden by default) -->
+                    ${admin ? `
                     <div id="addDataFormContainer" class="hidden mt-4 mb-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
                         <h4 class="text-lg font-bold mb-4">Tambah Data BPD</h4>
                         <form id="addDataForm" class="space-y-4">
@@ -263,6 +268,7 @@ export async function loadBPDContent(container) {
                             </div>
                         </form>
                     </div>
+                    ` : ''}
                     <div class="table-container">
                         <table class="transactions-table">
                             <thead>
@@ -339,11 +345,47 @@ export async function loadBPDContent(container) {
         
         // Add event listeners for table export buttons
         document.getElementById('exportExcelTable').addEventListener('click', () => {
-            exportToExcel(bpdData, 'BPD_Records');
+            // Filter data to include only required columns (nama_audit to realisasi)
+            const filteredData = bpdData.map(record => ({
+                'Nama Audit': record.nama_audit,
+                'Nama Pemesan': record.nama_pemesan,
+                'Jenis Audit': record.jenis_audit,
+                'No SPD': record.no_spd,
+                'No BPD': record.no_bpd,
+                'Periode Awal': record.periode_awal,
+                'Periode Akhir': record.periode_akhir,
+                'Lama Audit': record.lama_audit,
+                'Biaya Berangkat': record.biaya_berangkat,
+                'Biaya Penginapan': record.biaya_penginapan,
+                'Biaya Pulang': record.biaya_pulang,
+                'Total Akomodasi': record.total_akomodasi,
+                'Rincian Biaya Dinas': record.rincian_biaya_dinas,
+                'Total Akomodasi + Biaya Dinas': record.total_akomodasi_biaya_dinas,
+                'Realisasi': record.realisasi
+            }));
+            exportToExcel(filteredData, 'BPD_Records');
         });
         
         document.getElementById('exportPDFTable').addEventListener('click', () => {
-            exportToPDF(bpdData, 'BPD Records');
+            // Filter data to include only required columns (nama_audit to realisasi)
+            const filteredData = bpdData.map(record => ({
+                'Nama Audit': record.nama_audit,
+                'Nama Pemesan': record.nama_pemesan,
+                'Jenis Audit': record.jenis_audit,
+                'No SPD': record.no_spd,
+                'No BPD': record.no_bpd,
+                'Periode Awal': record.periode_awal,
+                'Periode Akhir': record.periode_akhir,
+                'Lama Audit': record.lama_audit,
+                'Biaya Berangkat': record.biaya_berangkat,
+                'Biaya Penginapan': record.biaya_penginapan,
+                'Biaya Pulang': record.biaya_pulang,
+                'Total Akomodasi': record.total_akomodasi,
+                'Rincian Biaya Dinas': record.rincian_biaya_dinas,
+                'Total Akomodasi + Biaya Dinas': record.total_akomodasi_biaya_dinas,
+                'Realisasi': record.realisasi
+            }));
+            exportToPDF(filteredData, 'BPD Records');
         });
         
         // Add search functionality
@@ -355,30 +397,41 @@ export async function loadBPDContent(container) {
             });
         }
         
-        // Add event listeners for inline form
-        document.getElementById('addDataBtn').addEventListener('click', () => {
-            document.getElementById('addDataFormContainer').classList.remove('hidden');
-        });
-        
-        document.getElementById('cancelAddDataBtn').addEventListener('click', () => {
-            document.getElementById('addDataFormContainer').classList.add('hidden');
-            // Reset form
-            document.getElementById('addDataForm').reset();
-        });
-        
-        // Add form submission handler
-        document.getElementById('addDataForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            await handleFormSubmit(container);
-            // Refresh the data after form submission
-            await loadBPDContent(container);
-        });
-        
-        // Add auto-calculation for total fields
-        setupFormCalculations();
-        
-        // Add form validation
-        setupFormValidation();
+        // Add event listeners for inline form (only for admin users)
+        if (admin) {
+            const addDataBtn = document.getElementById('addDataBtn');
+            if (addDataBtn) {
+                addDataBtn.addEventListener('click', () => {
+                    document.getElementById('addDataFormContainer').classList.remove('hidden');
+                });
+            }
+            
+            const cancelAddDataBtn = document.getElementById('cancelAddDataBtn');
+            if (cancelAddDataBtn) {
+                cancelAddDataBtn.addEventListener('click', () => {
+                    document.getElementById('addDataFormContainer').classList.add('hidden');
+                    // Reset form
+                    document.getElementById('addDataForm').reset();
+                });
+            }
+            
+            const addDataForm = document.getElementById('addDataForm');
+            if (addDataForm) {
+                // Add form submission handler
+                addDataForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    await handleFormSubmit(container);
+                    // Refresh the data after form submission
+                    await loadBPDContent(container);
+                });
+                
+                // Add auto-calculation for total fields
+                setupFormCalculations();
+                
+                // Add form validation
+                setupFormValidation();
+            }
+        }
     } catch (error) {
         console.error('Error loading BPD content:', error);
         container.innerHTML = `
