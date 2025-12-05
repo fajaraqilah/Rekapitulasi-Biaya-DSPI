@@ -1,22 +1,11 @@
-I want to redesign the login page to improve its appearance and user experience. The current page is functional but lacks visual branding and a polished layout.
+I need to update the SVG icons for two specific menu items in my sidebar as the previous ones were not clear enough:
 
-Please implement the following changes:
+1.  **"Beban Biaya Tamu":** The current icon doesn't clearly represent "guest" or "visitor" expenses. A better alternative would be an icon representing a **person staying overnight**, **hotel/accommodation**, or a **welcome guest**. Consider an SVG for a **bed**, **key**, or a **person with a suitcase**.
+    *   **Suggested Icon:** An SVG of a **bed** (representing accommodation costs for guests) would be very appropriate. Something like the outline of a bed with a person lying down or a simple bed frame shape.
+    *   **Alternative:** An SVG of a **key** (hotel key) or a **person with a suitcase**.
 
-1.  **Add PTPN 1 Logo:**
-    *   Use the logo file `logo ptpn1.png` located in the `assets` folder (`C:\Users\ASUS\Documents\rincian-biaya-spi\assets\logo ptpn1.png`).
-    *   Display the logo prominently on the login page, ideally centered above the login form or in a dedicated branding area.
-    *   Ensure the logo is appropriately sized and responsive (looks good on different screen sizes).
+2.  **"Beban Biaya Rapat":** The current icon doesn't clearly represent "meeting" expenses. A better alternative would be an icon representing a **conference**, **meeting room**, or **group discussion**.
+    *   **Suggested Icon:** An SVG of a **conference room**, **meeting table**, or a **group of people in a circle** (representing a discussion/meeting) would be more suitable.
+    *   **Alternative:** An SVG of a **presentation screen** or a **video conference** icon (like a video camera with multiple people).
 
-2.  **Improve Overall Layout and Styling:**
-    *   Create a more modern and visually appealing layout for the login form itself (email, password fields, login button).
-    *   Use Tailwind CSS classes to style the form container (e.g., add padding, background color, border radius, subtle shadow, center it on the page).
-    *   Enhance the styling of the input fields (e.g., focus states, padding, border styles).
-    *   Improve the styling of the login button (e.g., color, hover effects, padding).
-    *   Ensure the layout is responsive and looks good on mobile, tablet, and desktop screens.
-    *   Consider adding subtle background elements or a background color/image if appropriate, but keep the focus on the login form.
-
-3.  **Maintain Functionality:**
-    *   Ensure all existing login functionality remains intact.
-    *   The form submission and authentication process should work exactly as before.
-
-The goal is to create a professional-looking login page that incorporates the PTPN 1 branding and provides a better first impression for users.
+Please replace the inline SVG code for these two specific sidebar menu items with more representative icons based on the suggestions above. Ensure the new SVGs maintain the same Tailwind classes for size (`w-5 h-5`) and any other styling applied to the other icons for consistency.
