@@ -15,7 +15,30 @@ body, html {
     position: relative;
 }
 
-/* Style for the dropdown menu */
+/* Improved focus styles for accessibility */
+.focus\:outline-none:focus {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+}
+
+.focus\:ring-2:focus {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+}
+
+.focus\:ring-blue-500:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+.focus\:ring-green-500:focus {
+    outline: 2px solid #10b981;
+    outline-offset: 2px;
+}
+
+.focus\:ring-offset-2:focus {
+    outline-offset: 2px;
+}/* Style for the dropdown menu */
 .absolute {
     position: absolute;
 }
@@ -1008,24 +1031,95 @@ body, html {
     }
 }
 
+/* Loading skeleton styles */
+.animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: .5;
+    }
+}
+
+.bg-gray-200 {
+    background-color: #e5e7eb;
+}
+
+.rounded {
+    border-radius: 0.25rem;
+}
+
+.h-4 {
+    height: 1rem;
+}
+
+.h-24 {
+    height: 6rem;
+}
+
+.h-64 {
+    height: 16rem;
+}
+
+.h-96 {
+    height: 24rem;
+}
+
+.w-3\/4 {
+    width: 75%;
+}
+
+.w-5\/6 {
+    width: 83.333333%;
+}
+
+.grid-cols-1 {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+.grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.grid-cols-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.gap-4 {
+    gap: 1rem;
+}
+
+.mt-8 {
+    margin-top: 2rem;
+}
+
+.space-y-4 > :not([hidden]) ~ :not([hidden]) {
+    --tw-space-y-reverse: 0;
+    margin-top: calc(1rem * calc(1 - var(--tw-space-y-reverse)));
+    margin-bottom: calc(1rem * var(--tw-space-y-reverse));
+}
 /* Responsive styles */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
     .md\:ml-64 {
         margin-left: 0;
     }
-    
+
     .mt-16 {
         margin-top: 4rem;
     }
-    
+
     .md\:mt-0 {
         margin-top: 0;
     }
-    
+
     .grid-cols-4 {
         grid-template-columns: repeat(1, minmax(0, 1fr));
     }
-    
+
     .grid-cols-2 {
         grid-template-columns: repeat(1, minmax(0, 1fr));
     }
@@ -1123,55 +1217,55 @@ body, html {
 }
 
 /* Responsive adjustments */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
     .user-menu-dropdown {
         right: 0;
         left: auto;
     }
-    
+
     .header {
         padding: 0 0.5rem;
         left: 0; /* Full width on mobile */
     }
-    
+
     .header.expanded {
         left: 0; /* Full width on mobile */
     }
-    
+
     /* Mobile sidebar */
     .sidebar {
         transform: translateX(-100%); /* Hidden on mobile */
         padding-top: 4rem;
     }
-    
+
     .sidebar.visible {
         transform: translateX(0);
     }
-    
+
     .main-content {
         margin-left: 0;
         padding: 1rem;
         padding-top: 5rem;
     }
-    
+
     .main-content.expanded {
         margin-left: 0;
     }
-    
+
     .bpd-header {
         flex-direction: column;
         align-items: flex-start;
         gap: 1rem;
     }
-    
+
     .export-buttons {
         align-self: flex-end;
     }
-    
+
     .summary-cards {
         grid-template-columns: 1fr;
     }
-    
+
     .chart-wrapper {
         height: 16rem;
     }
@@ -1239,17 +1333,17 @@ body, html {
     max-width: 100vw;
 }
 
-/* Show sidebar on desktop */
-@media (min-width: 769px) {
+/* Show sidebar on tablet and desktop */
+@media (min-width: 768px) {
     .sidebar {
-        transform: translateX(0); /* Visible on desktop */
+        transform: translateX(0); /* Visible on tablet and desktop */
     }
 }
 
-/* Hide sidebar on iPad Mini resolution (768x1024) */
-@media (width: 768px) and (height: 1024px) {
+/* Hide sidebar on mobile, show on tablet and desktop */
+@media (max-width: 767px) {
     .sidebar {
-        transform: translateX(-100%);
+        transform: translateX(-100%); /* Hidden on mobile */
     }
 }
 
@@ -1260,18 +1354,39 @@ body, html {
 /* Ensure main content has proper spacing */
 .main-content {
     flex: 1;
-    margin-left: 16rem;
+    margin-left: 0; /* Start with 0 for mobile */
     padding: 1.5rem;
     padding-top: 5rem; /* Add extra top padding to account for fixed header */
     transition: all 0.3s ease;
-    width: calc(100% - 16rem); /* Ensure proper width calculation */
+    width: 100%; /* Start with full width for mobile */
     box-sizing: border-box; /* Include padding and border in element's total width and height */
     display: block; /* Ensure main content is displayed */
 }
 
-.main-content.expanded {
-    margin-left: 4rem;
-    width: calc(100% - 4rem); /* Ensure proper width calculation when collapsed */
+/* Adjust for desktop view with sidebar */
+@media (min-width: 1024px) {
+    .main-content {
+        margin-left: 16rem;
+        width: calc(100% - 16rem); /* Ensure proper width calculation */
+    }
+
+    .main-content.expanded {
+        margin-left: 4rem;
+        width: calc(100% - 4rem); /* Ensure proper width calculation when collapsed */
+    }
+}
+
+/* Tablet view - sidebar visible by default */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .main-content {
+        margin-left: 16rem;
+        width: calc(100% - 16rem); /* Ensure proper width calculation */
+    }
+
+    .main-content.expanded {
+        margin-left: 4rem;
+        width: calc(100% - 4rem); /* Ensure proper width calculation when collapsed */
+    }
 }
 
 /* Overlay for mobile sidebar */
@@ -1308,15 +1423,33 @@ body, html {
     height: 4rem;
     position: fixed;
     top: 0;
-    left: 16rem; /* Align with sidebar width */
+    left: 0; /* Start at 0 for mobile */
     right: 0;
     z-index: 50;
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
     transition: all 0.3s ease;
 }
 
-.header.expanded {
-    left: 4rem; /* Align with collapsed sidebar width */
+/* Adjust for desktop view with sidebar */
+@media (min-width: 1024px) {
+    .header {
+        left: 16rem; /* Align with sidebar width */
+    }
+
+    .header.expanded {
+        left: 4rem; /* Align with collapsed sidebar width */
+    }
+}
+
+/* Tablet view - sidebar visible by default */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .header {
+        left: 16rem; /* Align with sidebar width */
+    }
+
+    .header.expanded {
+        left: 4rem; /* Align with collapsed sidebar width */
+    }
 }
 
 /* Header content layout */
@@ -1399,37 +1532,37 @@ body, html {
 }
 
 /* Responsive adjustments for header */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
     .header-content {
         padding: 0 0.5rem;
     }
-    
+
     .header-left,
     .header-right {
         flex-shrink: 1;
     }
-    
+
     .sidebar-toggle {
         padding: 0.25rem;
         margin-right: 0.5rem;
     }
-    
+
     .user-menu-button {
         margin-left: 0.5rem;
         padding: 0.125rem;
     }
-    
+
     .user-initial {
         width: 1.5rem;
         height: 1.5rem;
         font-size: 0.75rem;
     }
-    
+
     /* Ensure title is properly spaced on mobile */
     .header-left a {
         margin-right: 0.5rem;
     }
-    
+
     /* Adjust header title for mobile */
     .header-left span {
         font-size: 1.5rem;
@@ -1478,7 +1611,7 @@ body, html {
 }
 
 /* Mobile-specific BPD container styles */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
     .bpd-container {
         padding-top: 1.5rem; /* Increase top padding on mobile */
     }
@@ -1663,21 +1796,21 @@ body, html {
 }
 
 /* Responsive adjustments */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
     .user-menu-dropdown {
         right: 0;
         left: auto;
     }
-    
+
     .header {
         padding: 0 0.5rem;
         left: 0; /* Full width on mobile */
     }
-    
+
     .header.expanded {
         left: 0; /* Full width on mobile */
     }
-    
+
     /* Mobile sidebar */
     .sidebar {
         transform: translateX(-100%);
@@ -1685,48 +1818,48 @@ body, html {
         width: 16rem;
         max-width: 100vw;
     }
-    
+
     .sidebar.visible {
         transform: translateX(0);
     }
-    
+
     /* Ensure sidebar menu text is visible on mobile */
     .sidebar .sidebar-menu-text {
         display: inline-block !important;
     }
-    
+
     .sidebar .sidebar-menu-item {
         justify-content: flex-start !important;
     }
-    
+
     .sidebar .sidebar-menu-icon {
         margin-right: 0.75rem !important;
     }
-    
+
     .main-content {
         margin-left: 0;
         padding: 1rem;
         padding-top: 5rem; /* Ensure enough top padding for fixed header */
     }
-    
+
     .main-content.expanded {
         margin-left: 0;
     }
-    
+
     .bpd-header {
         flex-direction: column;
         align-items: flex-start;
         gap: 1rem;
     }
-    
+
     .export-buttons {
         align-self: flex-end;
     }
-    
+
     .summary-cards {
         grid-template-columns: 1fr;
     }
-    
+
     .chart-wrapper {
         height: 16rem;
     }
@@ -1865,7 +1998,7 @@ body, html {
     }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
     .logo-text {
         font-size: 1rem;
     }
@@ -1997,6 +2130,76 @@ body, html {
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
+/* Chevron rotation for collapsible menu */
+.rotate-180 {
+    transform: rotate(180deg);
+    transition: transform 0.3s ease;
+}
+
+/* Budget menu item styles */
+.budget-menu-item {
+    padding: 0 0.75rem;
+    margin-bottom: 0.25rem;
+}
+
+.budget-btn {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 0.5rem;
+    background-color: #f3f4f6;
+    border: none;
+    border-radius: 0.5rem;
+    color: #374151;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.budget-btn:hover {
+    background-color: #e5e7eb;
+    color: #1f2937;
+}
+
+.budget-btn .w-4 {
+    width: 1rem;
+    height: 1rem;
+    margin-right: 0.5rem;
+    flex-shrink: 0;
+}
+
+.budget-btn .budget-btn-text {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 0.875rem;
+}
+
+/* Collapsed sidebar styles for budget buttons */
+.sidebar.collapsed .budget-menu-item {
+    padding: 0;
+    margin-bottom: 0;
+}
+
+.sidebar.collapsed .budget-btn {
+    justify-content: center;
+    padding: 0.5rem 0;
+    background-color: transparent;
+}
+
+.sidebar.collapsed .budget-btn:hover {
+    background-color: #f3f4f6;
+}
+
+.sidebar.collapsed .budget-btn-text {
+    display: none;
+}
+
+.sidebar.collapsed .budget-btn .w-4 {
+    margin-right: 0;
+}
+
 /* Add Data Form Container */
 #addDataFormContainer {
     margin-top: 1rem;
@@ -2008,61 +2211,61 @@ body, html {
 }
 
 /* Responsive adjustments for smaller screens */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
     /* Responsive adjustments for search input */
     #searchInput {
         width: 120px;
         font-size: 0.75rem;
         padding: 0.25rem;
     }
-    
+
     #bebanBiayaSearchInput {
         width: 120px;
         font-size: 0.75rem;
         padding: 0.25rem;
     }
-    
+
     .transactions-table-header {
         flex-direction: column;
         align-items: stretch;
         gap: 0.5rem;
     }
-    
+
     .transactions-table-header > div {
         display: flex;
         flex-wrap: wrap;
         gap: 0.5rem;
         justify-content: space-evenly;
     }
-    
+
     /* Adjustments for 375px screens */
     @media (max-width: 375px) {
         .transactions-table-header > div {
             gap: 0.25rem;
         }
-        
+
         .export-buttons {
             flex-wrap: wrap;
             gap: 0.25rem;
         }
-        
+
         .export-button {
             padding: 0.125rem 0.5rem;
             font-size: 0.75rem;
         }
-        
+
         #addDataBtn {
             padding: 0.125rem 0.5rem;
             font-size: 0.75rem;
         }
-        
+
         /* Adjust the space-x-2 gap for 375px screens */
         .space-x-2 {
             --tw-space-x-reverse: 0;
             margin-right: calc(0.25rem * var(--tw-space-x-reverse));
             margin-left: calc(0.25rem * calc(1 - var(--tw-space-x-reverse)));
         }
-        
+
         /* Make search input smaller on very small screens */
         #searchInput, #bebanBiayaSearchInput {
             width: 100px;
@@ -2070,27 +2273,27 @@ body, html {
             padding: 0.2rem;
         }
     }
-    
+
     /* Responsive adjustments for add data form */
     #addDataFormContainer {
         padding: 0.75rem;
     }
-    
+
     #addDataFormContainer .grid {
         grid-template-columns: 1fr;
     }
-    
+
     /* Pagination responsive adjustments */
     .table-pagination {
         flex-direction: column;
         align-items: stretch;
         gap: 1rem;
     }
-    
+
     .pagination-buttons {
         justify-content: center;
     }
-    
+
     .entries-info {
         text-align: center;
     }
@@ -2201,12 +2404,12 @@ body, html {
 }
 
 /* Responsive adjustments for smaller screens */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
     .table-pagination .pagination-buttons button {
         padding: 0.25rem 0.5rem;
         font-size: 0.875rem;
     }
-    
+
     .table-pagination .pagination-buttons span {
         padding: 0.25rem 0.25rem;
         font-size: 0.875rem;

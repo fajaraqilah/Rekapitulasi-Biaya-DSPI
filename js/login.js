@@ -8,15 +8,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Check if user is already logged in
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
-        // Check user role and redirect accordingly
-        const admin = await isAdmin(supabase);
-        if (admin) {
-            window.location.href = './admin.html';
-        } else {
-            window.location.href = './index.html';
-        }
-    }
-    
+        // Redirect all users to the consolidated dashboard
+        window.location.href = './dashboard.html';
+    }    
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         
@@ -35,13 +29,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             if (error) throw error;
             
-            // Check user role and redirect accordingly
-            const admin = await isAdmin(supabase);
-            if (admin) {
-                window.location.href = './admin.html';
-            } else {
-                window.location.href = './index.html';
-            }
+            // Redirect all users to the consolidated dashboard
+            window.location.href = './dashboard.html';
         } catch (error) {
             console.error('Login error:', error);
             errorMessage.textContent = error.message;

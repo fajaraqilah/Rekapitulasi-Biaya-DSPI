@@ -194,6 +194,10 @@ export function initMobileMenu() {
         
         // Toggle overlay visibility
         sidebarOverlay.classList.toggle('visible');
+        
+        // Update ARIA attributes for accessibility
+        const isExpanded = mobileMenuButton.getAttribute('aria-expanded') === 'true';
+        mobileMenuButton.setAttribute('aria-expanded', !isExpanded);
     });
     
     // Close menu when overlay is clicked
@@ -201,24 +205,30 @@ export function initMobileMenu() {
         sidebar.classList.remove('visible');
         sidebar.classList.add('hidden');
         sidebarOverlay.classList.remove('visible');
+        
+        // Update ARIA attributes for accessibility
+        const mobileMenuButton = document.getElementById('mobileMenuButton');
+        if (mobileMenuButton) {
+            mobileMenuButton.setAttribute('aria-expanded', 'false');
+        }
     });
     
     // Close menu when window is resized to desktop size
     window.addEventListener('resize', () => {
-        if (window.innerWidth >= 769) {
+        if (window.innerWidth >= 768) {
+            // On desktop/tablet, ensure sidebar is visible (except on mobile)
             sidebar.classList.remove('hidden');
             sidebar.classList.add('visible');
             sidebarOverlay.classList.remove('visible');
-        }
-        // Handle iPad Mini resolution (768x1024) - treat as tablet
-        if (window.innerWidth === 768) {
-            sidebar.classList.remove('visible');
-            sidebar.classList.add('hidden');
-            sidebarOverlay.classList.remove('visible');
+            
+            // Update ARIA attributes for accessibility
+            const mobileMenuButton = document.getElementById('mobileMenuButton');
+            if (mobileMenuButton) {
+                mobileMenuButton.setAttribute('aria-expanded', 'false');
+            }
         }
     });
 }
-
 // Desktop sidebar toggle function
 export function initDesktopMenu() {
     // Get DOM elements
@@ -243,6 +253,10 @@ export function initDesktopMenu() {
         
         // Toggle header expanded state
         header.classList.toggle('expanded');
+        
+        // Update ARIA attributes for accessibility
+        const isExpanded = desktopMenuButton.getAttribute('aria-expanded') === 'true';
+        desktopMenuButton.setAttribute('aria-expanded', !isExpanded);
     });
 }
 

@@ -12,7 +12,7 @@
     <nav class="header">
       <div class="header-content">
         <div class="header-left">
-          <!-- Hamburger menu button for desktop -->
+          <!-- Hamburger menu button for desktop and tablet -->
           <button
             id="desktopMenuButton"
             class="mr-4 text-gray-500 hover:text-gray-700 focus:outline-none hidden md:block"
@@ -175,6 +175,10 @@
             window.location.href = './login.html';
         }
         
+        // Redirect to consolidated dashboard
+        if (window.location.pathname !== '/dashboard.html') {
+            window.location.href = './dashboard.html';
+        }        
         // Set user info
         const user = session.user;
         if (user) {
@@ -301,10 +305,13 @@
                     sidebar.classList.add('hidden');
                 }
             } else {
-                // Desktop initial state - sidebar visible
+                // Tablet and desktop initial state - sidebar visible
                 if (sidebar) {
                     sidebar.classList.remove('hidden');
                     sidebar.classList.add('visible');
+                }
+                if (sidebarOverlay) {
+                    sidebarOverlay.classList.remove('visible');
                 }
             }
         }
@@ -312,18 +319,18 @@
         setInitialState();
 
         // Handle window resize
-window.addEventListener('resize', () => {
-    if (window.innerWidth < 1024) { 
-        // Untuk mobile & tablet
-        if (sidebar) {
-            sidebar.classList.remove('visible');
-            sidebar.classList.add('hidden');
-        }
-        if (sidebarOverlay) {
-            sidebarOverlay.classList.remove('visible');
-        }
-    } else {
-                // On desktop, ensure sidebar is visible
+        window.addEventListener('resize', () => {
+            if (window.innerWidth < 768) {
+                // For mobile views, hide sidebar by default
+                if (sidebar) {
+                    sidebar.classList.remove('visible');
+                    sidebar.classList.add('hidden');
+                }
+                if (sidebarOverlay) {
+                    sidebarOverlay.classList.remove('visible');
+                }
+            } else {
+                // On tablet and desktop, ensure sidebar is visible
                 if (sidebar) {
                     sidebar.classList.remove('hidden');
                     sidebar.classList.add('visible');

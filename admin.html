@@ -169,12 +169,16 @@
         
         // Check if user is logged in
         const { data: { session } } = await supabase.auth.getSession();
-        
+                
         if (!session) {
             // Redirect to login page if not authenticated
             window.location.href = './login.html';
         }
-        
+                
+        // Redirect to consolidated dashboard
+        if (window.location.pathname !== '/dashboard.html') {
+            window.location.href = './dashboard.html';
+        }
         // Set user info
         const user = session.user;
         if (user) {

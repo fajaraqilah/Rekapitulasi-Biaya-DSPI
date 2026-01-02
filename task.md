@@ -1,11 +1,104 @@
-I need to update the SVG icons for two specific menu items in my sidebar as the previous ones were not clear enough:
+## 🧠 AI AGENT PROMPT — Refactor Frontend Budget Logic (Over Budget Allowed)
 
-1.  **"Beban Biaya Tamu":** The current icon doesn't clearly represent "guest" or "visitor" expenses. A better alternative would be an icon representing a **person staying overnight**, **hotel/accommodation**, or a **welcome guest**. Consider an SVG for a **bed**, **key**, or a **person with a suitcase**.
-    *   **Suggested Icon:** An SVG of a **bed** (representing accommodation costs for guests) would be very appropriate. Something like the outline of a bed with a person lying down or a simple bed frame shape.
-    *   **Alternative:** An SVG of a **key** (hotel key) or a **person with a suitcase**.
+**Role**
+You are a senior frontend engineer with strong Supabase and PostgreSQL trigger knowledge.
 
-2.  **"Beban Biaya Rapat":** The current icon doesn't clearly represent "meeting" expenses. A better alternative would be an icon representing a **conference**, **meeting room**, or **group discussion**.
-    *   **Suggested Icon:** An SVG of a **conference room**, **meeting table**, or a **group of people in a circle** (representing a discussion/meeting) would be more suitable.
-    *   **Alternative:** An SVG of a **presentation screen** or a **video conference** icon (like a video camera with multiple people).
+---
 
-Please replace the inline SVG code for these two specific sidebar menu items with more representative icons based on the suggestions above. Ensure the new SVGs maintain the same Tailwind classes for size (`w-5 h-5`) and any other styling applied to the other icons for consistency.
+### 📌 Context
+
+I have a working budget system in Supabase using **database triggers**.
+
+Tables involved:
+
+* `beban_biaya_master` → contains `jumlah_awal` and `jumlah_akhir`
+* `beban_biaya_transaksi` → stores expense transactions
+* Budget **is allowed to go negative** (over budget)
+* Budget calculation and consistency are handled **ONLY by database triggers**
+
+However, my **frontend JavaScript still blocks transactions** with an error like:
+
+```
+Insufficient budget! Required: Rp 60.000.000, Available: Rp 50.000.000
+```
+
+This validation happens **before inserting data**, so the database trigger never runs.
+
+---
+
+### 🎯 Objective
+
+Refactor the frontend logic so that:
+
+1. Transactions can be added **even when budget is insufficient**
+2. Frontend **never blocks insert/update/delete** due to budget checks
+3. Budget calculations (`jumlah_akhir`, remaining budget) are **NOT handled in frontend**
+4. Frontend only:
+
+   * Sends transaction data
+   * Displays warnings (optional)
+   * Refreshes data after insert/update/delete
+
+---
+
+### 🧩 Constraints
+
+* Use **plain JavaScript** (no framework)
+* Do **NOT** change database schema or triggers
+* Do **NOT** calculate remaining budget in frontend
+* Keep UI warnings allowed, but **no hard stop (`return`, `throw`)**
+
+---
+
+### 🛠️ What to Do
+
+1. Identify and remove or refactor code patterns like:
+
+   ```js
+   if (biaya > remainingBudget) {
+     alert("Insufficient budget");
+     return;
+   }
+   ```
+
+2. Replace them with **non-blocking warnings**, e.g.:
+
+   ```js
+   if (biaya > remainingBudget) {
+     showToast("⚠️ Budget exceeded. Remaining budget will be negative.");
+   }
+   ```
+
+3. Ensure transaction insert always runs:
+
+   ```js
+   await supabase.from('beban_biaya_transaksi').insert(...)
+   ```
+
+4. After insert/update/delete:
+
+   * Re-fetch `beban_biaya_master`
+   * Re-render UI (Remaining Budget, tables, charts)
+
+---
+
+### 📦 Expected Output
+
+* Explanation of **why frontend validation breaks the system**
+* Exact frontend code sections that must be removed or changed
+* Clean, refactored JavaScript examples:
+
+  * Add transaction
+  * Edit transaction
+  * Delete transaction
+* Best practice summary:
+
+  > “Frontend = UX, Backend = Rules”
+
+---
+
+### 🧠 Key Principle (Do Not Violate)
+
+> **Database is the single source of truth for budget logic.
+> Frontend must never enforce budget constraints.**
+
