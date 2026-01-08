@@ -147,155 +147,47 @@ function renderInitialContent(container, module, categoryName, admin) {
     setupInitialEventListeners(module, categoryName, admin);
 }
 
-// Function to populate subcategory dropdown
 async function populateSubcategoryDropdown(categoryName, year) {
-    const subKategoriSelect = document.getElementById("subKategoriSelect");
-    const dropdownArrow = document.getElementById("dropdownArrow");
-
-    subKategoriSelect.addEventListener("click", () => {
-        dropdownArrow.classList.toggle("rotate-180");
-    });
     const subSelect = document.getElementById('subKategoriSelect');
-    if (subSelect) {
-        try {
-            let query = supabase
-                .from('beban_biaya_master')
-                .select('subkategori')
-                .eq('kategori', categoryName);
+    if (!subSelect) return;
 
-            // Add year filter if year is provided
-            if (year) {
-                query = query.eq('tahun', year);
-            }
+    subSelect.innerHTML =
+        '<option value="" disabled selected hidden>-- Pilih Subkategori --</option>';
 
-            const { data: subList, error: subError } = await query;
+    const parsedYear = Number(year);
+    if (!Number.isInteger(parsedYear)) {
+        console.warn('[populateSubcategoryDropdown] Invalid year:', year);
+        return;
+    }
 
-            // Define default subcategories based on the main category
-            const defaultSubcategoriesByCategory = {
-                'Beban Biaya Audit': [
-                    'Assessment QAIP',
-                    'Assesment RMI',
-                    'Assessment IACM'
-                ],
-                'Beban Biaya Jasa Profesional (Konsultan)': [
-                    'ICOFR',
-                    'Konsultan BPK',
-                    'Konsultan BPKP (Lainnya)'
-                ],
-                'Beban Biaya Iuran, Sumbangan & Retribusi': [
-                    'Keanggotaan Asosiasi Auditor (FKSPI, AAI,dll)'
-                ],
-                'Beban Biaya Tamu': [
-                    'Rapat Intern',
-                    'Sosialisasi WBS',
-                    'Sosialisasi SMAP',
-                    'Rapat Closing Meeting',
-                    'Rapat BPK',
-                    'Rapat KPK',
-                    'Rapat Pra Meeting',
-                    'Rapat Monitoring TL',
-                    'Rapat PMO Audit dan MR',
-                    'Rapat Komite Audit',
-                    'Rapat BPKP'
-                ],
-                'Beban Biaya Rapat': [
-                    'Counterpart KPK',
-                    'Counterpart BPKP',
-                    'Counterpart BPK',
-                    'Counterpart SPI Holding'
-                ]
-            };
+    try {
+        const { data, error } = await supabase
+            .from('beban_biaya_master')
+            .select('subkategori')
+            .eq('kategori', categoryName)
+            .eq('tahun', parsedYear)
+            .order('subkategori');
 
-            // Get appropriate default subcategories for the current category
-            const defaultSubcategories = defaultSubcategoriesByCategory[categoryName] || [
-                'Subkategori 1',
-                'Subkategori 2',
-                'Subkategori 3',
-                'Subkategori 4',
-                'Subkategori 5'
-            ];
+        if (error) throw error;
 
-            let uniqueSubs = [];
-            if (!subError && subList?.length > 0) {
-                // Remove duplicates from database results
-                uniqueSubs = [...new Set(subList.map(s => s.subkategori))];
-            }
-
-            // Combine default subcategories with any additional subcategories from the database
-            const allSubcategories = [...new Set([...defaultSubcategories, ...uniqueSubs])];
-
-            // Clear existing options except the default
-            subSelect.innerHTML = '<option value="" disabled hidden selected>-- Pilih Subkategori --</option>';
-
-            // Add options to dropdown
-            allSubcategories.forEach(sub => {
-                const option = document.createElement('option');
-                option.value = sub;
-                option.textContent = sub;
-                subSelect.appendChild(option);
-            });
-        } catch (error) {
-            console.error('Error populating subcategory dropdown:', error);
-
-            // If there's an error, still show default subcategories based on the category
-            const defaultSubcategoriesByCategory = {
-                'Beban Biaya Audit': [
-                    'Audit Internal',
-                    'Audit Eksternal',
-                    'Laporan Keuangan',
-                    'Verifikasi Dokumen',
-                    'Konsultasi Audit'
-                ],
-                'Beban Biaya Jasa Profesional (Konsultan)': [
-                    'Konsultan Teknis',
-                    'Konsultan Manajemen',
-                    'Konsultan Hukum',
-                    'Konsultan Pajak',
-                    'Konsultan SDM'
-                ],
-                'Beban Biaya Iuran, Sumbangan & Retribusi': [
-                    'Iuran Profesi',
-                    'Sumbangan Sosial',
-                    'Retribusi Pemerintah',
-                    'Keanggotaan Organisasi',
-                    'Lisensi & Perizinan'
-                ],
-                'Beban Biaya Tamu': [
-                    'Tamu Dinas',
-                    'Tamu Internal',
-                    'Tamu Eksternal',
-                    'Makanan & Minuman',
-                    'Akomodasi'
-                ],
-                'Beban Biaya Rapat': [
-                    'Rapat Internal',
-                    'Rapat Eksternal',
-                    'Rapat Evaluasi',
-                    'Rapat Koordinasi',
-                    'Rapat Sosialisasi'
-                ]
-            };
-
-            // Get appropriate default subcategories for the current category
-            const defaultSubcategories = defaultSubcategoriesByCategory[categoryName] || [
-                'Subkategori 1',
-                'Subkategori 2',
-                'Subkategori 3',
-                'Subkategori 4',
-                'Subkategori 5'
-            ];
-
-            // Clear existing options except the default
-            subSelect.innerHTML = '<option value="" disabled hidden selected>-- Pilih Subkategori --</option>';
-
-            // Add default options to dropdown
-            defaultSubcategories.forEach(sub => {
-                const option = document.createElement('option');
-                option.value = sub;
-                option.textContent = sub;
-                subSelect.appendChild(option);
-            });
+        if (!data || data.length === 0) {
+            console.warn(
+                `No subkategori found for ${categoryName} - ${parsedYear}`
+            );
+            return;
         }
+
+        const uniqueSubs = [...new Set(data.map(d => d.subkategori))];
+
+        uniqueSubs.forEach(sub => {
+            const option = document.createElement('option');
+            option.value = sub;
+            option.textContent = sub;
+            subSelect.appendChild(option);
+        });
+
+    } catch (err) {
+        console.error('Error populating subcategory dropdown:', err);
     }
 }
 // Function to set up initial event listeners
@@ -399,90 +291,111 @@ function setupInitialEventListeners(module, categoryName, admin) {
 }
 
 // Function to load data for a specific subcategory
-async function loadSubcategoryData(module, categoryName, subKategori, year = null) {
+async function loadSubcategoryData(module, categoryName, subKategori, year) {
     try {
-        // 1️⃣ Fetch master data directly from beban_biaya_master table
-        let masterQuery = supabase
-            .from('beban_biaya_master')
-            .select('id, tahun, kategori, subkategori, jumlah_awal, jumlah_akhir')
-            .eq('kategori', categoryName)
-            .eq('subkategori', subKategori);
-
-        // Add year filter if year is provided
-        if (year) {
-            masterQuery = masterQuery.eq('tahun', year);
-        } else {
+        // ==============================
+        // 1️⃣ VALIDASI YEAR (WAJIB)
+        // ==============================
+        if (!year || year === 'null' || isNaN(parseInt(year))) {
+            throw new Error(`Invalid year passed to loadSubcategoryData: ${year}`);
         }
 
-        const { data: masterData, error: masterError } = await masterQuery.single();
+        const parsedYear = parseInt(year);
 
+        console.log('[loadSubcategoryData]', {
+            module,
+            categoryName,
+            subKategori,
+            year: parsedYear
+        });
+
+        // ==============================
+        // 2️⃣ FETCH MASTER DATA (STRICT)
+        // ==============================
+        const { data: masterData, error: masterError } = await supabase
+            .from('beban_biaya_master')
+            .select('id, tahun, kategori, subkategori, jumlah_awal, jumlah_akhir')
+            .eq('tahun', parsedYear)
+            .eq('kategori', categoryName)
+            .eq('subkategori', subKategori)
+            .single();
+
+        // ==============================
+        // 3️⃣ HANDLE MASTER NOT FOUND
+        // ==============================
         if (masterError) {
-            // Check if the error is due to no rows found
-            if (masterError.code === 'PGRST116' || masterError.message.includes('Row not found')) {
-                // If no master data exists, create empty data structure
-                console.log(`No master data found for category: ${categoryName}, subcategory: ${subKategori}, year: ${year}. Using empty data.`);
+            if (masterError.code === 'PGRST116') {
+                console.warn(
+                    `No master data found for category: ${categoryName}, subcategory: ${subKategori}, year: ${parsedYear}`
+                );
 
-                // Create a default empty summary structure
                 const emptySummaryData = {
+                    master_id: null,
                     jumlah_awal: 0,
                     total_pemakaian: 0,
                     jumlah_akhir: 0,
                     jumlah_transaksi: 0,
-                    master_id: null // Will be used to fetch transactions
+                    tahun: parsedYear,
+                    kategori: categoryName,
+                    subkategori: subKategori
                 };
 
-                // Since there's no master_id, we can't fetch transactions
-                const emptyTransactionData = [];
-
-                // Update UI with empty data
-                updateUIWithSubcategoryData(emptySummaryData, emptyTransactionData, subKategori);
+                updateUIWithSubcategoryData(emptySummaryData, [], subKategori);
                 return;
-            } else {
-                // If it's a different error, throw it
-                throw masterError;
             }
+
+            throw masterError;
         }
 
-        // Calculate total transactions and total usage from transactions
-        let transactionData = [];
-        let totalPemakaian = 0;
-        let jumlahTransaksi = 0;
-
-        // Fetch transactions for this master record
-        const transactionResult = await supabase
+        // ==============================
+        // 4️⃣ FETCH TRANSACTIONS
+        // ==============================
+        const { data: transactionData, error: transactionError } = await supabase
             .from('beban_biaya_transaksi')
             .select('*')
             .eq('master_id', masterData.id)
             .order('tanggal_kegiatan', { ascending: false });
 
-        if (!transactionResult.error) {
-            transactionData = transactionResult.data;
-            totalPemakaian = transactionData.reduce((sum, trans) => sum + (trans.biaya_kegiatan || 0), 0);
-            jumlahTransaksi = transactionData.length;
+        if (transactionError) {
+            throw transactionError;
         }
 
-        // Create summary data structure
+        // ==============================
+        // 5️⃣ CALCULATE SUMMARY
+        // ==============================
+        const totalPemakaian = transactionData.reduce(
+            (sum, trans) => sum + Number(trans.biaya_kegiatan || 0),
+            0
+        );
+
         const summaryData = {
             master_id: masterData.id,
-            jumlah_awal: masterData.jumlah_awal || 0,
+            jumlah_awal: Number(masterData.jumlah_awal || 0),
             total_pemakaian: totalPemakaian,
-            jumlah_akhir: (masterData.jumlah_akhir !== undefined && masterData.jumlah_akhir !== null && masterData.jumlah_akhir !== '') ? masterData.jumlah_akhir : (masterData.jumlah_awal - totalPemakaian),
-            jumlah_transaksi: jumlahTransaksi,
+            jumlah_akhir:
+                masterData.jumlah_akhir !== null
+                    ? Number(masterData.jumlah_akhir)
+                    : Number(masterData.jumlah_awal || 0) - totalPemakaian,
+            jumlah_transaksi: transactionData.length,
             tahun: masterData.tahun,
             kategori: masterData.kategori,
             subkategori: masterData.subkategori
         };
 
-        // 3️⃣ Update UI with data
+        // ==============================
+        // 6️⃣ UPDATE UI
+        // ==============================
         updateUIWithSubcategoryData(summaryData, transactionData, subKategori);
 
     } catch (error) {
         console.error('Error loading subcategory data:', error);
-        // Show error in the summary cards container
+
         document.getElementById('summaryCardsContainer').innerHTML = `
             <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative mt-4" role="alert">
-                <strong class="font-bold">Error! </strong>
-                <span class="block sm:inline">Failed to load subcategory data: ${error.message}</span>
+                <strong class="font-bold">Error!</strong>
+                <span class="block sm:inline">
+                    ${error.message}
+                </span>
             </div>
         `;
     }
@@ -782,7 +695,7 @@ async function saveBudget(module, categoryName, subKategori) {
             console.error('Error fetching existing master record:', fetchError);
             throw fetchError;
         }
-        
+
         let result;
         if (existingMaster) {
             // Update existing record - preserve the difference between initial and remaining amounts
@@ -1047,12 +960,12 @@ async function handleFormSubmit(module, categoryName, subKategori) {
             .select('id, jumlah_awal, jumlah_akhir')
             .eq('kategori', categoryName)
             .eq('subkategori', subKategori);
-        
+
         // Only filter by year if currentYear is not null
         if (currentYear !== null) {
             query = query.eq('tahun', currentYear);
         }
-        
+
         const { data: masterData, error: masterError } = await query.single();
 
         if (masterError || !masterData) {
