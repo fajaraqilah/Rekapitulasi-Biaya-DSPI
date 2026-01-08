@@ -1,5 +1,5 @@
 import { supabase } from './supabaseClient.js';
-import { formatCurrency, exportToExcel, exportToPDF } from './utils.js';
+import { formatCurrency, exportToExcel, exportToPDF, formatNumberWithDots, setupNumberFormatting, parseFormattedNumber, showSuccessModal, showConfirmModal } from './utils.js';
 import { applyPagination, isAdmin } from './utils.js';
 import Chart from 'chart.js/auto';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
@@ -17,6 +17,7 @@ let currentContainer = null;
 let currentModule = null;
 let currentCategoryName = null;
 let currentYear = null;
+let currentAdmin = false;
 
 // Function to load Beban Biaya content
 export async function loadBebanBiayaContent(container, module, year = null) {
@@ -25,21 +26,23 @@ export async function loadBebanBiayaContent(container, module, year = null) {
         const admin = await isAdmin(supabase);
         // Map kategori
         const categoryName = moduleCategoryMap[module] || module;
-        
+
         // Store references for later use
         currentContainer = container;
         currentModule = module;
         currentCategoryName = categoryName;
-        currentYear = year; // Store the year for later use
-        
+        currentAdmin = admin; // Store admin status
+        // Normalize year to number or null, avoiding "null" string
+        currentYear = (year && year !== 'null') ? parseInt(year) : null;
+
         // Render initial UI with subcategory dropdown
         renderInitialContent(container, module, categoryName, admin);
-        
+
         // Populate subcategory dropdown
         setTimeout(async () => {
             await populateSubcategoryDropdown(categoryName, year);
         }, 100);
-        
+
     } catch (error) {
         console.error('Error initializing Beban Biaya data:', error);
         container.innerHTML = `
@@ -119,7 +122,7 @@ function renderInitialContent(container, module, categoryName, admin) {
                     </div>
                     <div>
                         <label class="form-label">Biaya Kegiatan</label>
-                        <input type="number" id="biayaKegiatan" class="form-control" min="0" step="0.01" required>
+                        <input type="text" id="biayaKegiatan" class="form-control" placeholder="0" required>
                     </div>
                     <div class="md:col-span-2 flex justify-end space-x-2">
                         <button type="button" id="cancelTransactionBtn" class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50">Cancel</button>
@@ -139,7 +142,7 @@ function renderInitialContent(container, module, categoryName, admin) {
             <div id="transactionsTableContainer"></div>
         </div>
     `;
-    
+
     // Set up initial event listeners
     setupInitialEventListeners(module, categoryName, admin);
 }
@@ -147,13 +150,13 @@ function renderInitialContent(container, module, categoryName, admin) {
 // Function to populate subcategory dropdown
 async function populateSubcategoryDropdown(categoryName, year) {
     const subKategoriSelect = document.getElementById("subKategoriSelect");
-const dropdownArrow = document.getElementById("dropdownArrow");
+    const dropdownArrow = document.getElementById("dropdownArrow");
 
-subKategoriSelect.addEventListener("click", () => {
-    dropdownArrow.classList.toggle("rotate-180");
-});
+    subKategoriSelect.addEventListener("click", () => {
+        dropdownArrow.classList.toggle("rotate-180");
+    });
     const subSelect = document.getElementById('subKategoriSelect');
-    if (subSelect) {    
+    if (subSelect) {
         try {
             let query = supabase
                 .from('beban_biaya_master')
@@ -202,7 +205,7 @@ subKategoriSelect.addEventListener("click", () => {
                     'Counterpart SPI Holding'
                 ]
             };
-            
+
             // Get appropriate default subcategories for the current category
             const defaultSubcategories = defaultSubcategoriesByCategory[categoryName] || [
                 'Subkategori 1',
@@ -211,19 +214,19 @@ subKategoriSelect.addEventListener("click", () => {
                 'Subkategori 4',
                 'Subkategori 5'
             ];
-            
+
             let uniqueSubs = [];
             if (!subError && subList?.length > 0) {
                 // Remove duplicates from database results
                 uniqueSubs = [...new Set(subList.map(s => s.subkategori))];
             }
-            
+
             // Combine default subcategories with any additional subcategories from the database
             const allSubcategories = [...new Set([...defaultSubcategories, ...uniqueSubs])];
-            
+
             // Clear existing options except the default
             subSelect.innerHTML = '<option value="" disabled hidden selected>-- Pilih Subkategori --</option>';
-            
+
             // Add options to dropdown
             allSubcategories.forEach(sub => {
                 const option = document.createElement('option');
@@ -233,7 +236,7 @@ subKategoriSelect.addEventListener("click", () => {
             });
         } catch (error) {
             console.error('Error populating subcategory dropdown:', error);
-            
+
             // If there's an error, still show default subcategories based on the category
             const defaultSubcategoriesByCategory = {
                 'Beban Biaya Audit': [
@@ -272,7 +275,7 @@ subKategoriSelect.addEventListener("click", () => {
                     'Rapat Sosialisasi'
                 ]
             };
-            
+
             // Get appropriate default subcategories for the current category
             const defaultSubcategories = defaultSubcategoriesByCategory[categoryName] || [
                 'Subkategori 1',
@@ -281,10 +284,10 @@ subKategoriSelect.addEventListener("click", () => {
                 'Subkategori 4',
                 'Subkategori 5'
             ];
-            
+
             // Clear existing options except the default
             subSelect.innerHTML = '<option value="" disabled hidden selected>-- Pilih Subkategori --</option>';
-            
+
             // Add default options to dropdown
             defaultSubcategories.forEach(sub => {
                 const option = document.createElement('option');
@@ -300,7 +303,7 @@ function setupInitialEventListeners(module, categoryName, admin) {
     // Subcategory dropdown change event
     const subSelect = document.getElementById('subKategoriSelect');
     if (subSelect) {
-        subSelect.addEventListener('change', async function() {
+        subSelect.addEventListener('change', async function () {
             if (this.value) {
                 // Show the "Add Transaction" and "Set Budget" buttons immediately when a subcategory is selected (only for admin)
                 if (admin) {
@@ -313,7 +316,7 @@ function setupInitialEventListeners(module, categoryName, admin) {
                         setBudgetBtn.classList.remove('hidden');
                     }
                 }
-                
+
                 await loadSubcategoryData(module, categoryName, this.value, currentYear);
             } else {
                 // Clear data when no subcategory is selected
@@ -321,7 +324,7 @@ function setupInitialEventListeners(module, categoryName, admin) {
                 document.getElementById('transactionsTableContainer').innerHTML = '';
                 document.getElementById('exportExcel').classList.add('hidden');
                 document.getElementById('exportPDF').classList.add('hidden');
-                
+
                 // Hide the "Add Transaction" and "Set Budget" buttons when no subcategory is selected (only for admin)
                 if (admin) {
                     const toggleFormBtn = document.getElementById('toggleFormBtn');
@@ -336,18 +339,22 @@ function setupInitialEventListeners(module, categoryName, admin) {
             }
         });
     }
-    
+
     // Set up event listeners for admin users only
     if (admin) {
         // Form toggle button
         const toggleFormBtn = document.getElementById('toggleFormBtn');
         const formContainer = document.getElementById('transactionFormContainer');
-        
+
         if (toggleFormBtn && formContainer) {
             toggleFormBtn.addEventListener('click', () => {
                 formContainer.classList.toggle('hidden');
+                // Setup formatting if becoming visible
+                if (!formContainer.classList.contains('hidden')) {
+                    setupNumberFormatting('biayaKegiatan');
+                }
             });
-            
+
             // Form submission
             const form = document.getElementById('transactionForm');
             if (form) {
@@ -361,7 +368,7 @@ function setupInitialEventListeners(module, categoryName, admin) {
                     await handleFormSubmit(module, categoryName, selectedSubKategori);
                 });
             }
-            
+
             // Cancel button
             const cancelBtn = document.getElementById('cancelTransactionBtn');
             if (cancelBtn) {
@@ -373,7 +380,7 @@ function setupInitialEventListeners(module, categoryName, admin) {
                 });
             }
         }
-        
+
         // Budget button
         const setBudgetBtn = document.getElementById('setBudgetBtn');
         if (setBudgetBtn) {
@@ -381,6 +388,8 @@ function setupInitialEventListeners(module, categoryName, admin) {
                 const selectedSubKategori = document.getElementById('subKategoriSelect').value;
                 if (selectedSubKategori && selectedSubKategori !== '') {
                     openBudgetModal(module, categoryName, selectedSubKategori);
+                    // Setup formatting
+                    setupNumberFormatting('budgetAmount');
                 } else {
                     alert('Please select a subcategory first');
                 }
@@ -393,7 +402,7 @@ function setupInitialEventListeners(module, categoryName, admin) {
 async function loadSubcategoryData(module, categoryName, subKategori, year = null) {
     try {
         // 1️⃣ Fetch master data directly from beban_biaya_master table
-            let masterQuery = supabase
+        let masterQuery = supabase
             .from('beban_biaya_master')
             .select('id, tahun, kategori, subkategori, jumlah_awal, jumlah_akhir')
             .eq('kategori', categoryName)
@@ -412,7 +421,7 @@ async function loadSubcategoryData(module, categoryName, subKategori, year = nul
             if (masterError.code === 'PGRST116' || masterError.message.includes('Row not found')) {
                 // If no master data exists, create empty data structure
                 console.log(`No master data found for category: ${categoryName}, subcategory: ${subKategori}, year: ${year}. Using empty data.`);
-                
+
                 // Create a default empty summary structure
                 const emptySummaryData = {
                     jumlah_awal: 0,
@@ -421,10 +430,10 @@ async function loadSubcategoryData(module, categoryName, subKategori, year = nul
                     jumlah_transaksi: 0,
                     master_id: null // Will be used to fetch transactions
                 };
-                
+
                 // Since there's no master_id, we can't fetch transactions
                 const emptyTransactionData = [];
-                
+
                 // Update UI with empty data
                 updateUIWithSubcategoryData(emptySummaryData, emptyTransactionData, subKategori);
                 return;
@@ -438,14 +447,14 @@ async function loadSubcategoryData(module, categoryName, subKategori, year = nul
         let transactionData = [];
         let totalPemakaian = 0;
         let jumlahTransaksi = 0;
-        
+
         // Fetch transactions for this master record
         const transactionResult = await supabase
             .from('beban_biaya_transaksi')
             .select('*')
             .eq('master_id', masterData.id)
             .order('tanggal_kegiatan', { ascending: false });
-        
+
         if (!transactionResult.error) {
             transactionData = transactionResult.data;
             totalPemakaian = transactionData.reduce((sum, trans) => sum + (trans.biaya_kegiatan || 0), 0);
@@ -466,7 +475,7 @@ async function loadSubcategoryData(module, categoryName, subKategori, year = nul
 
         // 3️⃣ Update UI with data
         updateUIWithSubcategoryData(summaryData, transactionData, subKategori);
-        
+
     } catch (error) {
         console.error('Error loading subcategory data:', error);
         // Show error in the summary cards container
@@ -504,7 +513,7 @@ function updateUIWithSubcategoryData(summaryData, transactionData, subKategori) 
             </div>
         `;
     }
-    
+
     // Update transactions table
     const transactionsTableContainer = document.getElementById('transactionsTableContainer');
     if (transactionData && transactionsTableContainer) {
@@ -529,7 +538,7 @@ function updateUIWithSubcategoryData(summaryData, transactionData, subKategori) 
                                 <th>Jumlah Orang</th>
                                 <th>Biaya</th>
                                 <th>Jumlah Transaksi</th>
-                                <th>Actions</th>
+                                ${currentAdmin ? '<th>Actions</th>' : ''}
                             </tr>
                         </thead>
                         <tbody id="bebanBiayaTableBody">
@@ -539,13 +548,13 @@ function updateUIWithSubcategoryData(summaryData, transactionData, subKategori) 
                 </div>
             </div>
         `;
-        
+
         // Apply pagination to the table
         const pagination = applyPagination('bebanBiayaTableContainer', transactionData, (record) => {
             // This filter function will be used for search functionality
             const searchTerm = document.getElementById('bebanBiayaSearchInput')?.value.toLowerCase() || '';
             if (!searchTerm) return true;
-            
+
             return (
                 (record.tanggal_kegiatan && record.tanggal_kegiatan.toLowerCase().includes(searchTerm)) ||
                 (record.nama_kegiatan && record.nama_kegiatan.toLowerCase().includes(searchTerm)) ||
@@ -553,17 +562,17 @@ function updateUIWithSubcategoryData(summaryData, transactionData, subKategori) 
                 (record.biaya_kegiatan && record.biaya_kegiatan.toString().includes(searchTerm))
             );
         });
-        
+
         // Function to render table rows
         function renderTableRows(data) {
             const tableBody = document.getElementById('bebanBiayaTableBody');
             if (!tableBody) return;
-            
+
             if (data.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="5" class="text-center py-4">No data available</td></tr>';
+                tableBody.innerHTML = `<tr><td colspan="${currentAdmin ? 6 : 5}" class="text-center py-4">No data available</td></tr>`;
                 return;
             }
-            
+
             tableBody.innerHTML = data.map(transaction => `
                 <tr>
                     <td>${transaction.tanggal_kegiatan || '-'}</td>
@@ -571,21 +580,57 @@ function updateUIWithSubcategoryData(summaryData, transactionData, subKategori) 
                     <td>${transaction.jumlah_orang || '-'}</td>
                     <td>${formatCurrency(transaction.biaya_kegiatan)}</td>
                     <td>1</td>
-                    <td class="actions-cell">
-                        ${admin ? `
-                            <button class="edit-btn text-blue-500 hover:text-blue-700 cursor-pointer mr-2" onclick="openEditTransactionModal('${transaction.id}', '${transaction.tanggal_kegiatan}', '${transaction.nama_kegiatan}', '${transaction.jumlah_orang}', '${transaction.biaya_kegiatan}', '${module}', '${categoryName}', '${subKategori}', ${currentYear})">✏️</button>
-                        ` : ''}
+                    ${currentAdmin ? `
+                    <td class="actions-cell flex items-center">
+                        <button class="edit-btn text-blue-500 hover:text-blue-700 transition-colors p-1" title="Edit">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                        </button>
+                        <button class="delete-btn text-red-500 hover:text-red-700 transition-colors p-1 ml-1" title="Hapus">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
                     </td>
+                    ` : ''}
                 </tr>
             `).join('');
+
+            // Add event listeners to edit buttons
+            if (currentAdmin) {
+                const editButtons = tableBody.querySelectorAll('.edit-btn');
+                editButtons.forEach((btn, index) => {
+                    btn.addEventListener('click', () => {
+                        const transaction = data[index];
+                        openEditTransactionModal(
+                            transaction.id,
+                            transaction.tanggal_kegiatan,
+                            transaction.nama_kegiatan,
+                            transaction.jumlah_orang,
+                            transaction.biaya_kegiatan,
+                            currentModule,
+                            currentCategoryName,
+                            subKategori,
+                            currentYear
+                        );
+                        // Setup formatting
+                        setupNumberFormatting('editBiayaKegiatan');
+                    });
+                });
+
+                const deleteButtons = tableBody.querySelectorAll('.delete-btn');
+                deleteButtons.forEach((btn, index) => {
+                    btn.addEventListener('click', async () => {
+                        const transaction = data[index];
+                        await handleDeleteTransaction(transaction.id, currentModule, currentCategoryName, subKategori);
+                    });
+                });
+            }
         }
-        
+
         // Set the render callback for pagination
         pagination.setRenderCallback(renderTableRows);
-        
+
         // Initial table render
         pagination.render();
-        
+
         // Add search functionality
         const searchInput = document.getElementById('bebanBiayaSearchInput');
         if (searchInput) {
@@ -595,15 +640,15 @@ function updateUIWithSubcategoryData(summaryData, transactionData, subKategori) 
             });
         }
     }
-    
+
     // Show export buttons only when there are transactions
     const exportExcelBtn = document.getElementById('exportExcel');
     const exportPdfBtn = document.getElementById('exportPDF');
-    
+
     if (exportExcelBtn && exportPdfBtn && transactionData && transactionData.length > 0) {
         exportExcelBtn.classList.remove('hidden');
         exportPdfBtn.classList.remove('hidden');
-        
+
         // Update export button event listeners
         exportExcelBtn.onclick = () => {
             // Filter data to include only required columns
@@ -615,7 +660,7 @@ function updateUIWithSubcategoryData(summaryData, transactionData, subKategori) 
             }));
             exportToExcel(filteredData, `${currentModule}_${subKategori}_transactions`);
         };
-        
+
         exportPdfBtn.onclick = () => {
             // Filter data to include only required columns
             const filteredData = (window.currentTransactionData || transactionData).map(record => ({
@@ -631,7 +676,7 @@ function updateUIWithSubcategoryData(summaryData, transactionData, subKategori) 
         exportExcelBtn.classList.add('hidden');
         exportPdfBtn.classList.add('hidden');
     }
-    
+
     // Store the current transaction data for later use
     if (transactionData) {
         window.currentTransactionData = transactionData;
@@ -667,7 +712,7 @@ export function openBudgetModal(module, categoryName, subKategori) {
                     </div>
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Budget Amount (Anggaran)</label>
-                        <input type="number" id="budgetAmount" class="form-control w-full" step="0.01" placeholder="Enter budget amount" required>
+                        <input type="text" id="budgetAmount" class="form-control w-full" placeholder="0" required>
                     </div>
                     <div class="flex justify-end space-x-3">
                         <button type="button" id="cancelBudgetBtn" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Cancel</button>
@@ -677,10 +722,10 @@ export function openBudgetModal(module, categoryName, subKategori) {
             </div>
         </div>
     `;
-    
+
     // Add modal to the page
     document.body.insertAdjacentHTML('beforeend', modalHtml);
-    
+
     // Add event listeners
     document.getElementById('closeBudgetModal').addEventListener('click', closeBudgetModal);
     document.getElementById('cancelBudgetBtn').addEventListener('click', closeBudgetModal);
@@ -703,26 +748,26 @@ async function saveBudget(module, categoryName, subKategori) {
     // Add null checks for form elements
     const yearElement = document.getElementById('budgetYear');
     const amountElement = document.getElementById('budgetAmount');
-    
+
     if (!yearElement || !amountElement) {
         alert('Budget form elements not found. Please try again.');
         return;
     }
-    
+
     const year = yearElement.value;
-    const amount = parseFloat(amountElement.value);
-    
-    if (!year || isNaN(amount)) {
+    const amount = parseFormattedNumber(amountElement.value);
+
+    if (!year || isNaN(amount) || amount === 0) {
         alert('Please enter valid year and budget amount');
         return;
     }
-    
+
     // Ensure amount is a positive number
     if (amount < 0) {
         alert('Budget amount must be a positive number');
         return;
     }
-    
+
     try {
         // Check if a master record already exists
         const { data: existingMaster, error: fetchError } = await supabase
@@ -732,7 +777,7 @@ async function saveBudget(module, categoryName, subKategori) {
             .eq('kategori', categoryName)
             .eq('subkategori', subKategori)
             .single();
-        
+
         if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 means no rows found
             console.error('Error fetching existing master record:', fetchError);
             throw fetchError;
@@ -743,7 +788,7 @@ async function saveBudget(module, categoryName, subKategori) {
             // Update existing record - preserve the difference between initial and remaining amounts
             // Calculate the difference to adjust jumlah_akhir accordingly
             const amountDifference = amount - existingMaster.jumlah_awal;
-            const newJumlahAkhir = (existingMaster.jumlah_akhir !== undefined && existingMaster.jumlah_akhir !== null) 
+            const newJumlahAkhir = (existingMaster.jumlah_akhir !== undefined && existingMaster.jumlah_akhir !== null)
                 ? existingMaster.jumlah_akhir + amountDifference
                 : amount; // If jumlah_akhir is null, set it to the new budget amount
             result = await supabase
@@ -754,17 +799,17 @@ async function saveBudget(module, categoryName, subKategori) {
                     updated_at: new Date().toISOString()
                 })
                 .eq('id', existingMaster.id);
-            
+
             // Verify the update by fetching the record again
             const { data: verifyData, error: verifyError } = await supabase
                 .from('beban_biaya_master')
                 .select('jumlah_awal, jumlah_akhir')
                 .eq('id', existingMaster.id)
                 .single();
-            
+
             if (verifyError) {
                 console.error('Error verifying update:', verifyError);
-            }   
+            }
             if (result.error) {
                 console.error('Error updating master record:', result.error);
                 throw result.error;
@@ -772,7 +817,7 @@ async function saveBudget(module, categoryName, subKategori) {
         } else {
             // Create new master record with budget
             console.log('Creating new master record with jumlah_awal:', amount);
-            
+
             console.log('About to insert new record with jumlah_awal:', amount);
             result = await supabase
                 .from('beban_biaya_master')
@@ -786,7 +831,7 @@ async function saveBudget(module, categoryName, subKategori) {
                     updated_at: new Date().toISOString()
                 }]);
             console.log('Insert result:', result);
-                        
+
             // Verify the insert by fetching the newly created record
             if (!result.error && result.data && result.data.length > 0) {
                 const newRecordId = result.data[0].id;
@@ -795,30 +840,30 @@ async function saveBudget(module, categoryName, subKategori) {
                     .select('jumlah_awal, jumlah_akhir')
                     .eq('id', newRecordId)
                     .single();
-                            
+
                 if (verifyError) {
                     console.error('Error verifying insert:', verifyError);
                 } else {
                     console.log('Verification after insert - jumlah_awal:', verifyData.jumlah_awal, 'jumlah_akhir:', verifyData.jumlah_akhir);
                 }
             }
-                        
+
             if (result.error) {
                 console.error('Error inserting new master record:', result.error);
                 throw result.error;
             }
         }
-        alert('Budget saved successfully!');
+        showSuccessModal('Anggaran (Budget) berhasil disimpan dan diperbarui!', 'Anggaran Tersimpan');
         closeBudgetModal();
-        
+
         // Small delay to ensure data is properly saved before refreshing
         await new Promise(resolve => setTimeout(resolve, 200));
-        
+
         // Refresh the current view to show updated budget
         if (subKategori) {
             await loadSubcategoryData(module, categoryName, subKategori, parseInt(year));
         }
-        
+
     } catch (error) {
         console.error('Error saving budget:', error);
         alert('Error saving budget: ' + error.message);
@@ -854,7 +899,7 @@ function openEditTransactionModal(transactionId, tanggalKegiatan, namaKegiatan, 
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Biaya Kegiatan</label>
-                        <input type="number" id="editBiayaKegiatan" class="form-control w-full" min="0" step="0.01" value="${biayaKegiatan}" required>
+                        <input type="text" id="editBiayaKegiatan" class="form-control w-full" min="0" value="${formatNumberWithDots(biayaKegiatan)}" required>
                     </div>
                     <div class="flex justify-end space-x-3">
                         <button type="button" id="cancelEditTransactionBtn" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Cancel</button>
@@ -864,10 +909,10 @@ function openEditTransactionModal(transactionId, tanggalKegiatan, namaKegiatan, 
             </div>
         </div>
     `;
-    
+
     // Add modal to the page
     document.body.insertAdjacentHTML('beforeend', modalHtml);
-    
+
     // Add event listeners
     document.getElementById('closeEditTransactionModal').addEventListener('click', closeEditTransactionModal);
     document.getElementById('cancelEditTransactionBtn').addEventListener('click', closeEditTransactionModal);
@@ -891,27 +936,27 @@ async function handleEditTransactionSubmit(transactionId, oldTanggalKegiatan, ol
     const tanggalKegiatan = document.getElementById('editTanggalKegiatan').value;
     const namaKegiatan = document.getElementById('editNamaKegiatan').value;
     const jumlahOrang = parseInt(document.getElementById('editJumlahOrang').value);
-    const biayaKegiatan = parseFloat(document.getElementById('editBiayaKegiatan').value);
-    
+    const biayaKegiatan = parseFormattedNumber(document.getElementById('editBiayaKegiatan').value);
+
     try {
         // Validate form fields
-        if (!tanggalKegiatan || !namaKegiatan || !jumlahOrang || !biayaKegiatan) {
+        if (!tanggalKegiatan || !namaKegiatan || !jumlahOrang || biayaKegiatan === undefined || biayaKegiatan === null) {
             alert("Please fill in all required fields!");
             return;
         }
-        
+
         if (biayaKegiatan < 0) {
             alert("Transaction amount must be a positive number!");
             return;
         }
-        
+
         // Fetch the current master record to check budget
         const { data: masterData, error: masterError } = await supabase
             .from('beban_biaya_master')
             .select('id, jumlah_awal, jumlah_akhir')
             .eq('kategori', categoryName)
             .eq('subkategori', subKategori)
-            .eq('tahun', year)
+            .eq('tahun', parseInt(year))
             .single();
 
         if (masterError) {
@@ -923,15 +968,15 @@ async function handleEditTransactionSubmit(transactionId, oldTanggalKegiatan, ol
             }
             return;
         }
-        
+
         if (!masterData) {
             alert(`Master record not found for ${subKategori}.`);
             return;
         }
-        
+
         // Calculate the budget adjustment based on the difference between old and new biaya
         const biayaDifference = biayaKegiatan - oldBiayaKegiatan;
-        
+
         // Update the transaction record
         const { error: updateError } = await supabase
             .from('beban_biaya_transaksi')
@@ -947,23 +992,23 @@ async function handleEditTransactionSubmit(transactionId, oldTanggalKegiatan, ol
             console.error('Error updating transaction:', updateError);
             throw updateError;
         }
-        
+
         // Note: Budget calculations are handled by database triggers, so we don't manually update jumlah_akhir here
-        
+
         console.log('Transaction updated successfully');
-        
+
         // Show success message
-        alert('Transaction updated successfully!');
-        
+        showSuccessModal('Data transaksi berhasil diperbarui dengan informasi terbaru!', 'Transaksi Diperbarui');
+
         // Close the modal
         closeEditTransactionModal();
-        
+
         // Small delay to ensure data is properly saved before refreshing
         await new Promise(resolve => setTimeout(resolve, 200));
-        
+
         // Refresh data
         await loadSubcategoryData(module, categoryName, subKategori, year);
-        
+
     } catch (error) {
         console.error('Error updating transaction:', error);
         alert('Error updating transaction: ' + error.message);
@@ -976,50 +1021,46 @@ async function handleFormSubmit(module, categoryName, subKategori) {
     const tanggalKegiatan = document.getElementById('tanggalKegiatan').value;
     const namaKegiatan = document.getElementById('namaKegiatan').value;
     const jumlahOrang = parseInt(document.getElementById('jumlahOrang').value);
-    const biayaKegiatan = parseFloat(document.getElementById('biayaKegiatan').value);
-    
+    const biayaKegiatan = parseFormattedNumber(document.getElementById('biayaKegiatan').value);
+
     try {
         // Validate subcategory selection
         if (!subKategori) {
             alert("Please select a subcategory first!");
             return;
         }
-        
+
         // Validate form fields
-        if (!tanggalKegiatan || !namaKegiatan || !jumlahOrang || !biayaKegiatan) {
+        if (!tanggalKegiatan || !namaKegiatan || !jumlahOrang || biayaKegiatan === undefined || biayaKegiatan === null) {
             alert("Please fill in all required fields!");
             return;
         }
-        
+
         if (biayaKegiatan < 0) {
             alert("Transaction amount must be a positive number!");
             return;
         }
-        
-        // Fetch the correct master_id using both kategori and subkategori
-        const { data: masterData, error: masterError } = await supabase
+
+        // Fetch the correct master_id using strict lookup
+        let query = supabase
             .from('beban_biaya_master')
             .select('id, jumlah_awal, jumlah_akhir')
             .eq('kategori', categoryName)
-            .eq('subkategori', subKategori)
-            .eq('tahun', currentYear)
-            .single();
+            .eq('subkategori', subKategori);
+        
+        // Only filter by year if currentYear is not null
+        if (currentYear !== null) {
+            query = query.eq('tahun', currentYear);
+        }
+        
+        const { data: masterData, error: masterError } = await query.single();
 
-        if (masterError) {
+        if (masterError || !masterData) {
             console.error('Error fetching master record:', masterError);
-            if (masterError.code === 'PGRST116') {
-                alert(`Master record not found for ${subKategori}. Please set a budget first.`);
-            } else {
-                alert(`Error accessing budget data: ${masterError.message}`);
-            }
+            alert(`Budget not set for ${categoryName} - ${subKategori} (${currentYear !== null ? currentYear : 'no year specified'})`);
             return;
         }
-        
-        if (!masterData) {
-            alert(`Master record not found for ${subKategori}. Please set a budget first.`);
-            return;
-        }
-        
+
         // Insert new transaction with master_id reference
         const { data: transactionResult, error: insertError } = await supabase
             .from('beban_biaya_transaksi')
@@ -1035,28 +1076,55 @@ async function handleFormSubmit(module, categoryName, subKategori) {
             console.error('Error inserting transaction:', insertError);
             throw insertError;
         }
-        
+
         // Note: Budget calculations are handled by database triggers, so we don't manually update jumlah_akhir here
-        
+
         console.log('Transaction added successfully');
-        
+
         // Show success message
-        alert('Transaction added successfully!');
-        
+        showSuccessModal('Transaksi baru berhasil ditambahkan ke dalam sistem!', 'Transaksi Berhasil');
+
         // Reset form
         document.getElementById('transactionForm').reset();
-        
+
         // Hide form
         document.getElementById('transactionFormContainer').classList.add('hidden');
-        
+
         // Small delay to ensure data is properly saved before refreshing
         await new Promise(resolve => setTimeout(resolve, 200));
-        
+
         // Refresh data
         await loadSubcategoryData(module, categoryName, subKategori, currentYear);
-        
+
     } catch (error) {
         console.error('Error adding transaction:', error);
         alert('Error adding transaction: ' + error.message);
+    }
+}
+
+// Function to handle transaction deletion
+async function handleDeleteTransaction(transactionId, module, categoryName, subKategori) {
+    const confirmed = await showConfirmModal('Apakah Anda yakin ingin menghapus transaksi ini? Data yang dihapus tidak dapat dikembalikan.');
+
+    if (!confirmed) {
+        return;
+    }
+
+    try {
+        const { error } = await supabase
+            .from('beban_biaya_transaksi')
+            .delete()
+            .eq('id', transactionId);
+
+        if (error) throw error;
+
+        showSuccessModal('Transaksi berhasil dihapus dari sistem.', 'Hapus Berhasil');
+
+        // Refresh data
+        await loadSubcategoryData(module, categoryName, subKategori, currentYear);
+
+    } catch (error) {
+        console.error('Error deleting transaction:', error);
+        alert('Error deleting transaction: ' + error.message);
     }
 }

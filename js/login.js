@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
         // Redirect all users to the consolidated dashboard
-        window.location.href = './dashboard.html';
+        window.location.href = './index.html';
     }    
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (error) throw error;
             
             // Redirect all users to the consolidated dashboard
-            window.location.href = './dashboard.html';
+            window.location.href = './index.html';
         } catch (error) {
             console.error('Login error:', error);
             errorMessage.textContent = error.message;

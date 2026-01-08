@@ -3,7 +3,8 @@
 /* Custom styles for DSPI Dashboard */
 
 /* Reset default body and html styles */
-body, html {
+body,
+html {
     margin: 0;
     padding: 0;
     overflow-x: hidden;
@@ -38,7 +39,9 @@ body, html {
 
 .focus\:ring-offset-2:focus {
     outline-offset: 2px;
-}/* Style for the dropdown menu */
+}
+
+/* Style for the dropdown menu */
 .absolute {
     position: absolute;
 }
@@ -156,7 +159,7 @@ body, html {
     margin-top: 1rem;
 }
 
-.space-y-1 > :not([hidden]) ~ :not([hidden]) {
+.space-y-1> :not([hidden])~ :not([hidden]) {
     --tw-space-y-reverse: 0;
     margin-top: calc(0.25rem * calc(1 - var(--tw-space-y-reverse)));
     margin-bottom: calc(0.25rem * var(--tw-space-y-reverse));
@@ -245,7 +248,7 @@ body, html {
     font-size: 1.125rem;
 }
 
-.space-x-2 > :not([hidden]) ~ :not([hidden]) {
+.space-x-2> :not([hidden])~ :not([hidden]) {
     --tw-space-x-reverse: 0;
     margin-right: calc(0.5rem * var(--tw-space-x-reverse));
     margin-left: calc(0.5rem * calc(1 - var(--tw-space-x-reverse)));
@@ -295,7 +298,7 @@ body, html {
     margin-bottom: 1rem;
 }
 
-.space-y-4 > :not([hidden]) ~ :not([hidden]) {
+.space-y-4> :not([hidden])~ :not([hidden]) {
     --tw-space-y-reverse: 0;
     margin-top: calc(1rem * calc(1 - var(--tw-space-y-reverse)));
     margin-bottom: calc(1rem * var(--tw-space-y-reverse));
@@ -603,7 +606,7 @@ body, html {
     right: 1rem;
 }
 
-.space-y-2 > :not([hidden]) ~ :not([hidden]) {
+.space-y-2> :not([hidden])~ :not([hidden]) {
     --tw-space-y-reverse: 0;
     margin-top: calc(0.5rem * calc(1 - var(--tw-space-y-reverse)));
     margin-bottom: calc(0.5rem * var(--tw-space-y-reverse));
@@ -681,7 +684,7 @@ body, html {
     border-bottom-width: calc(1px * var(--tw-divide-y-reverse));
 }
 
-.divide-gray-200 > :not([hidden]) ~ :not([hidden]) {
+.divide-gray-200> :not([hidden])~ :not([hidden]) {
     --tw-divide-opacity: 1;
     border-color: rgba(229, 231, 235, var(--tw-divide-opacity));
 }
@@ -1025,6 +1028,7 @@ body, html {
         transform: translateX(100%);
         opacity: 0;
     }
+
     to {
         transform: translateX(0);
         opacity: 1;
@@ -1037,9 +1041,12 @@ body, html {
 }
 
 @keyframes pulse {
-    0%, 100% {
+
+    0%,
+    100% {
         opacity: 1;
     }
+
     50% {
         opacity: .5;
     }
@@ -1097,11 +1104,12 @@ body, html {
     margin-top: 2rem;
 }
 
-.space-y-4 > :not([hidden]) ~ :not([hidden]) {
+.space-y-4> :not([hidden])~ :not([hidden]) {
     --tw-space-y-reverse: 0;
     margin-top: calc(1rem * calc(1 - var(--tw-space-y-reverse)));
     margin-bottom: calc(1rem * var(--tw-space-y-reverse));
 }
+
 /* Responsive styles */
 @media (max-width: 767px) {
     .md\:ml-64 {
@@ -1137,8 +1145,10 @@ body, html {
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
     border: 1px solid #e5e7eb;
     z-index: 50;
-    overflow: visible; /* Ensure borders are visible */
-    box-sizing: border-box; /* Include border in element's total width and height */
+    overflow: visible;
+    /* Ensure borders are visible */
+    box-sizing: border-box;
+    /* Include border in element's total width and height */
 }
 
 .user-menu-dropdown.hidden {
@@ -1167,7 +1177,8 @@ body, html {
 
 .user-menu-list {
     padding: 0.25rem 0;
-    margin-bottom: 0.125rem; /* Add small margin to ensure bottom border visibility */
+    margin-bottom: 0.125rem;
+    /* Add small margin to ensure bottom border visibility */
 }
 
 .user-menu-item {
@@ -1225,16 +1236,19 @@ body, html {
 
     .header {
         padding: 0 0.5rem;
-        left: 0; /* Full width on mobile */
+        left: 0;
+        /* Full width on mobile */
     }
 
     .header.expanded {
-        left: 0; /* Full width on mobile */
+        left: 0;
+        /* Full width on mobile */
     }
 
     /* Mobile sidebar */
     .sidebar {
-        transform: translateX(-100%); /* Hidden on mobile */
+        transform: translateX(-100%);
+        /* Hidden on mobile */
         padding-top: 4rem;
     }
 
@@ -1275,35 +1289,35 @@ body, html {
     .header-content {
         padding: 0 0.5rem;
     }
-    
+
     .sidebar-toggle {
         padding: 0.25rem;
         margin-right: 0.25rem;
     }
-    
+
     .user-menu-button {
         margin-left: 0.5rem;
         padding: 0.125rem;
     }
-    
+
     .user-initial {
         width: 1.5rem;
         height: 1.5rem;
         font-size: 0.75rem;
     }
-    
+
     .main-content {
         padding: 0.75rem;
     }
-    
+
     .summary-card {
         padding: 1rem;
     }
-    
+
     .transactions-table-container {
         padding: 1rem;
     }
-    
+
     .transactions-table th,
     .transactions-table td {
         padding: 0.5rem;
@@ -1327,23 +1341,28 @@ body, html {
     z-index: 40;
     overflow-y: auto;
     transition: all 0.3s ease;
-    padding-top: 4rem; /* Height of header */
-    display: block; /* Ensure sidebar is displayed */
-    transform: translateX(-100%); /* Hidden by default */
+    padding-top: 4rem;
+    /* Height of header */
+    display: block;
+    /* Ensure sidebar is displayed */
+    transform: translateX(-100%);
+    /* Hidden by default */
     max-width: 100vw;
 }
 
 /* Show sidebar on tablet and desktop */
 @media (min-width: 768px) {
     .sidebar {
-        transform: translateX(0); /* Visible on tablet and desktop */
+        transform: translateX(0);
+        /* Visible on tablet and desktop */
     }
 }
 
 /* Hide sidebar on mobile, show on tablet and desktop */
 @media (max-width: 767px) {
     .sidebar {
-        transform: translateX(-100%); /* Hidden on mobile */
+        transform: translateX(-100%);
+        /* Hidden on mobile */
     }
 }
 
@@ -1354,25 +1373,32 @@ body, html {
 /* Ensure main content has proper spacing */
 .main-content {
     flex: 1;
-    margin-left: 0; /* Start with 0 for mobile */
+    margin-left: 0;
+    /* Start with 0 for mobile */
     padding: 1.5rem;
-    padding-top: 5rem; /* Add extra top padding to account for fixed header */
+    padding-top: 5rem;
+    /* Add extra top padding to account for fixed header */
     transition: all 0.3s ease;
-    width: 100%; /* Start with full width for mobile */
-    box-sizing: border-box; /* Include padding and border in element's total width and height */
-    display: block; /* Ensure main content is displayed */
+    width: 100%;
+    /* Start with full width for mobile */
+    box-sizing: border-box;
+    /* Include padding and border in element's total width and height */
+    display: block;
+    /* Ensure main content is displayed */
 }
 
 /* Adjust for desktop view with sidebar */
 @media (min-width: 1024px) {
     .main-content {
         margin-left: 16rem;
-        width: calc(100% - 16rem); /* Ensure proper width calculation */
+        width: calc(100% - 16rem);
+        /* Ensure proper width calculation */
     }
 
     .main-content.expanded {
         margin-left: 4rem;
-        width: calc(100% - 4rem); /* Ensure proper width calculation when collapsed */
+        width: calc(100% - 4rem);
+        /* Ensure proper width calculation when collapsed */
     }
 }
 
@@ -1380,12 +1406,14 @@ body, html {
 @media (min-width: 768px) and (max-width: 1023px) {
     .main-content {
         margin-left: 16rem;
-        width: calc(100% - 16rem); /* Ensure proper width calculation */
+        width: calc(100% - 16rem);
+        /* Ensure proper width calculation */
     }
 
     .main-content.expanded {
         margin-left: 4rem;
-        width: calc(100% - 4rem); /* Ensure proper width calculation when collapsed */
+        width: calc(100% - 4rem);
+        /* Ensure proper width calculation when collapsed */
     }
 }
 
@@ -1395,11 +1423,13 @@ body, html {
     inset: 0;
     background-color: rgba(0, 0, 0, 0.5);
     z-index: 45;
-    display: none; /* Hidden by default */
+    display: none;
+    /* Hidden by default */
 }
 
 .sidebar-overlay.visible {
-    display: block; /* Visible when active */
+    display: block;
+    /* Visible when active */
 }
 
 /* Hide sidebar and overlay by default */
@@ -1423,7 +1453,8 @@ body, html {
     height: 4rem;
     position: fixed;
     top: 0;
-    left: 0; /* Start at 0 for mobile */
+    left: 0;
+    /* Start at 0 for mobile */
     right: 0;
     z-index: 50;
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
@@ -1433,22 +1464,26 @@ body, html {
 /* Adjust for desktop view with sidebar */
 @media (min-width: 1024px) {
     .header {
-        left: 16rem; /* Align with sidebar width */
+        left: 16rem;
+        /* Align with sidebar width */
     }
 
     .header.expanded {
-        left: 4rem; /* Align with collapsed sidebar width */
+        left: 4rem;
+        /* Align with collapsed sidebar width */
     }
 }
 
 /* Tablet view - sidebar visible by default */
 @media (min-width: 768px) and (max-width: 1023px) {
     .header {
-        left: 16rem; /* Align with sidebar width */
+        left: 16rem;
+        /* Align with sidebar width */
     }
 
     .header.expanded {
-        left: 4rem; /* Align with collapsed sidebar width */
+        left: 4rem;
+        /* Align with collapsed sidebar width */
     }
 }
 
@@ -1462,7 +1497,8 @@ body, html {
     padding: 0 1rem;
 }
 
-.header-left, .header-right {
+.header-left,
+.header-right {
     display: flex;
     align-items: center;
     height: 100%;
@@ -1573,22 +1609,22 @@ body, html {
     .header-content {
         padding: 0 0.25rem;
     }
-    
+
     .sidebar-toggle {
         padding: 0.125rem;
         margin-right: 0.25rem;
     }
-    
+
     .user-menu-button {
         margin-left: 0.25rem;
         padding: 0.125rem;
     }
-    
+
     /* Reduce spacing further on small screens */
     .header-left a {
         margin-right: 0.25rem;
     }
-    
+
     /* Further adjust header title for small screens */
     .header-left span {
         font-size: 1.25rem;
@@ -1600,7 +1636,8 @@ body, html {
     width: 100%;
     max-width: 100%;
     overflow-x: hidden;
-    box-sizing: border-box; /* Include padding and border in element's total width and height */
+    box-sizing: border-box;
+    /* Include padding and border in element's total width and height */
 }
 
 .bpd-header {
@@ -1613,13 +1650,15 @@ body, html {
 /* Mobile-specific BPD container styles */
 @media (max-width: 767px) {
     .bpd-container {
-        padding-top: 1.5rem; /* Increase top padding on mobile */
+        padding-top: 1.5rem;
+        /* Increase top padding on mobile */
     }
 }
 
 @media (max-width: 480px) {
     .bpd-container {
-        padding-top: 1rem; /* Adjust padding for smaller screens */
+        padding-top: 1rem;
+        /* Adjust padding for smaller screens */
     }
 }
 
@@ -1668,7 +1707,8 @@ body, html {
     border: 1px solid #e5e7eb;
     padding: 1rem;
     margin-bottom: 1.5rem;
-    box-sizing: border-box; /* Include padding and border in element's total width and height */
+    box-sizing: border-box;
+    /* Include padding and border in element's total width and height */
 }
 
 .chart-header {
@@ -1699,7 +1739,8 @@ body, html {
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
     border: 1px solid #e5e7eb;
     padding: 1.5rem;
-    box-sizing: border-box; /* Include padding and border in element's total width and height */
+    box-sizing: border-box;
+    /* Include padding and border in element's total width and height */
 }
 
 .summary-card-header {
@@ -1733,7 +1774,8 @@ body, html {
     border: 1px solid #e5e7eb;
     padding: 1.5rem;
     overflow-x: auto;
-    box-sizing: border-box; /* Include padding and border in element's total width and height */
+    box-sizing: border-box;
+    /* Include padding and border in element's total width and height */
 }
 
 .transactions-table-header {
@@ -1804,11 +1846,13 @@ body, html {
 
     .header {
         padding: 0 0.5rem;
-        left: 0; /* Full width on mobile */
+        left: 0;
+        /* Full width on mobile */
     }
 
     .header.expanded {
-        left: 0; /* Full width on mobile */
+        left: 0;
+        /* Full width on mobile */
     }
 
     /* Mobile sidebar */
@@ -1839,7 +1883,8 @@ body, html {
     .main-content {
         margin-left: 0;
         padding: 1rem;
-        padding-top: 5rem; /* Ensure enough top padding for fixed header */
+        padding-top: 5rem;
+        /* Ensure enough top padding for fixed header */
     }
 
     .main-content.expanded {
@@ -1869,41 +1914,42 @@ body, html {
     .header-content {
         padding: 0 0.5rem;
     }
-    
+
     .header-left,
     .header-right {
         flex-shrink: 1;
     }
-    
+
     .sidebar-toggle {
         padding: 0.25rem;
         margin-right: 0.25rem;
     }
-    
+
     .user-menu-button {
         margin-left: 0.5rem;
         padding: 0.125rem;
     }
-    
+
     .user-initial {
         width: 1.5rem;
         height: 1.5rem;
         font-size: 0.75rem;
     }
-    
+
     .main-content {
         padding: 0.75rem;
-        padding-top: 5rem; /* Ensure enough top padding for fixed header */
+        padding-top: 5rem;
+        /* Ensure enough top padding for fixed header */
     }
-    
+
     .summary-card {
         padding: 1rem;
     }
-    
+
     .transactions-table-container {
         padding: 1rem;
     }
-    
+
     .transactions-table th,
     .transactions-table td {
         padding: 0.5rem;
@@ -1966,8 +2012,10 @@ body, html {
 
 .logo-container {
     display: flex;
-    flex-direction: column; /* 👈 INI yang membuat teks ke bawah */
-    align-items: center;    /* center horizontal */
+    flex-direction: column;
+    /* 👈 INI yang membuat teks ke bawah */
+    align-items: center;
+    /* center horizontal */
     justify-content: center;
     padding: 1rem;
     border-bottom: 1px solid #e5e7eb;
@@ -2056,7 +2104,7 @@ body, html {
         height: 3rem;
         margin-right: 0.5rem;
     }
-    
+
     .logo-container {
         padding: 0.75rem;
     }
@@ -2067,11 +2115,11 @@ body, html {
     .logo-text {
         font-size: 0.75rem;
     }
-    
+
     .logo-image {
         height: 3rem;
     }
-    
+
     .logo-container {
         padding: 0.5rem;
     }
@@ -2212,6 +2260,7 @@ body, html {
 
 /* Responsive adjustments for smaller screens */
 @media (max-width: 767px) {
+
     /* Responsive adjustments for search input */
     #searchInput {
         width: 120px;
@@ -2231,7 +2280,7 @@ body, html {
         gap: 0.5rem;
     }
 
-    .transactions-table-header > div {
+    .transactions-table-header>div {
         display: flex;
         flex-wrap: wrap;
         gap: 0.5rem;
@@ -2240,7 +2289,7 @@ body, html {
 
     /* Adjustments for 375px screens */
     @media (max-width: 375px) {
-        .transactions-table-header > div {
+        .transactions-table-header>div {
             gap: 0.25rem;
         }
 
@@ -2267,7 +2316,8 @@ body, html {
         }
 
         /* Make search input smaller on very small screens */
-        #searchInput, #bebanBiayaSearchInput {
+        #searchInput,
+        #bebanBiayaSearchInput {
             width: 100px;
             font-size: 0.7rem;
             padding: 0.2rem;
@@ -2305,7 +2355,7 @@ body, html {
         padding: 0.25rem 0.5rem;
         font-size: 0.875rem;
     }
-    
+
     .table-pagination .pagination-buttons span {
         padding: 0.25rem 0.25rem;
         font-size: 0.875rem;
@@ -2334,7 +2384,7 @@ body, html {
     .mobile-icon {
         display: block;
     }
-    
+
     .desktop-icon {
         display: none;
     }
@@ -2421,9 +2471,77 @@ body, html {
         padding: 0.25rem 0.5rem;
         font-size: 0.75rem;
     }
-    
+
     .table-pagination .pagination-buttons span {
         padding: 0.25rem 0.25rem;
         font-size: 0.75rem;
     }
+}
+
+/* Success Modal Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes bounceOnce {
+
+    0%,
+    20%,
+    50%,
+    80%,
+    100% {
+        transform: translateY(0);
+    }
+
+    40% {
+        transform: translateY(-20px);
+    }
+
+    60% {
+        transform: translateY(-10px);
+    }
+}
+
+.animate-fadeIn {
+    animation: fadeIn 0.3s ease-out;
+}
+
+.animate-fadeOut {
+    animation: fadeOut 0.3s ease-in forwards;
+}
+
+.animate-scaleIn {
+    animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.animate-bounceOnce {
+    animation: bounceOnce 0.8s ease;
 }

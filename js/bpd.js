@@ -1,5 +1,5 @@
 import { supabase } from './supabaseClient.js';
-import { formatCurrency, exportToExcel, exportToPDF } from './utils.js';
+import { formatCurrency, exportToExcel, exportToPDF, formatNumberWithDots, setupNumberFormatting, parseFormattedNumber, showSuccessModal, showToast, showConfirmModal } from './utils.js';
 import { applyPagination, isAdmin } from './utils.js';
 import Chart from 'chart.js/auto';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
@@ -19,50 +19,50 @@ export function openBPDBudgetModal(categoryName, subKategori) {
     const modal = document.createElement('div');
     modal.id = 'budgetModal';
     modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
-    
+
     const modalContent = document.createElement('div');
     modalContent.className = 'bg-white rounded-lg p-6 w-full max-w-md';
-    
+
     const headerDiv = document.createElement('div');
     headerDiv.className = 'flex justify-between items-center mb-4';
-    
+
     const title = document.createElement('h3');
     title.className = 'text-lg font-semibold';
     title.textContent = 'Set BPD Budget';
-    
+
     const closeButton = document.createElement('button');
     closeButton.id = 'closeBudgetModal';
     closeButton.className = 'text-gray-500 hover:text-gray-700';
-    
+
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('class', 'w-6 h-6');
     svg.setAttribute('fill', 'none');
     svg.setAttribute('stroke', 'currentColor');
     svg.setAttribute('viewBox', '0 0 24 24');
     svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-    
+
     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     path.setAttribute('stroke-linecap', 'round');
     path.setAttribute('stroke-linejoin', 'round');
     path.setAttribute('stroke-width', '2');
     path.setAttribute('d', 'M6 18L18 6M6 6l12 12');
-    
+
     svg.appendChild(path);
     closeButton.appendChild(svg);
-    
+
     headerDiv.appendChild(title);
     headerDiv.appendChild(closeButton);
-    
+
     const form = document.createElement('form');
     form.id = 'bpdBudgetForm';
-    
+
     const yearDiv = document.createElement('div');
     yearDiv.className = 'mb-4';
-    
+
     const yearLabel = document.createElement('label');
     yearLabel.className = 'block text-sm font-medium text-gray-700 mb-1';
     yearLabel.textContent = 'Year';
-    
+
     const yearInput = document.createElement('input');
     yearInput.type = 'number';
     yearInput.id = 'bpdBudgetYear';
@@ -71,75 +71,76 @@ export function openBPDBudgetModal(categoryName, subKategori) {
     yearInput.min = '2000';
     yearInput.max = '2100';
     yearInput.required = true;
-    
+
     yearDiv.appendChild(yearLabel);
     yearDiv.appendChild(yearInput);
-    
+
     const categoryDiv = document.createElement('div');
     categoryDiv.className = 'mb-4';
-    
+
     const categoryLabel = document.createElement('label');
     categoryLabel.className = 'block text-sm font-medium text-gray-700 mb-1';
     categoryLabel.textContent = 'Category';
-    
+
     const categoryInput = document.createElement('input');
     categoryInput.type = 'text';
     categoryInput.id = 'bpdBudgetCategory';
     categoryInput.className = 'form-control w-full';
     categoryInput.value = 'BPD';
     categoryInput.readOnly = true;
-    
+
     categoryDiv.appendChild(categoryLabel);
     categoryDiv.appendChild(categoryInput);
-    
+
     const budgetDiv = document.createElement('div');
     budgetDiv.className = 'mb-4';
-    
+
     const budgetLabel = document.createElement('label');
     budgetLabel.className = 'block text-sm font-medium text-gray-700 mb-1';
     budgetLabel.textContent = 'Budget Amount';
-    
+
     const budgetInput = document.createElement('input');
-    budgetInput.type = 'number';
+    budgetInput.type = 'text';
     budgetInput.id = 'bpdBudgetAmount';
     budgetInput.className = 'form-control w-full';
-    budgetInput.step = '0.01';
-    budgetInput.placeholder = 'Enter budget amount';
-    budgetInput.min = '0';
+    budgetInput.placeholder = '0';
     budgetInput.required = true;
-    
+
     budgetDiv.appendChild(budgetLabel);
     budgetDiv.appendChild(budgetInput);
-    
+
     const buttonDiv = document.createElement('div');
     buttonDiv.className = 'flex justify-end space-x-3';
-    
+
     const cancelBtn = document.createElement('button');
     cancelBtn.type = 'button';
     cancelBtn.id = 'cancelBudgetBtn';
     cancelBtn.className = 'px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50';
     cancelBtn.textContent = 'Cancel';
-    
+
     const submitBtn = document.createElement('button');
     submitBtn.type = 'submit';
     submitBtn.className = 'px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600';
     submitBtn.textContent = 'Save Budget';
-    
+
     buttonDiv.appendChild(cancelBtn);
     buttonDiv.appendChild(submitBtn);
-    
+
     form.appendChild(yearDiv);
     form.appendChild(categoryDiv);
     form.appendChild(budgetDiv);
     form.appendChild(buttonDiv);
-    
+
     modalContent.appendChild(headerDiv);
     modalContent.appendChild(form);
     modal.appendChild(modalContent);
-    
+
     // Add modal to the page
     document.body.appendChild(modal);
-    
+
+    // Setup number formatting for budget amount
+    setupNumberFormatting('bpdBudgetAmount');
+
     // Add event listeners
     document.getElementById('closeBudgetModal').addEventListener('click', closeBudgetModal);
     document.getElementById('cancelBudgetBtn').addEventListener('click', closeBudgetModal);
@@ -163,46 +164,46 @@ export function openBPDEditModal(record, container, year = null) {
     const modal = document.createElement('div');
     modal.id = 'editBPDModal';
     modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
-    
+
     const modalContent = document.createElement('div');
     modalContent.className = 'bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto';
-    
+
     const headerDiv = document.createElement('div');
     headerDiv.className = 'flex justify-between items-center mb-4';
-    
+
     const title = document.createElement('h3');
     title.className = 'text-lg font-semibold';
     title.textContent = 'Edit BPD - ' + (record.nama_audit || 'Unknown');
-    
+
     const closeButton = document.createElement('button');
     closeButton.id = 'closeEditBPDModal';
     closeButton.className = 'text-gray-500 hover:text-gray-700';
-    
+
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('class', 'w-6 h-6');
     svg.setAttribute('fill', 'none');
     svg.setAttribute('stroke', 'currentColor');
     svg.setAttribute('viewBox', '0 0 24 24');
     svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-    
+
     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     path.setAttribute('stroke-linecap', 'round');
     path.setAttribute('stroke-linejoin', 'round');
     path.setAttribute('stroke-width', '2');
     path.setAttribute('d', 'M6 18L18 6M6 6l12 12');
-    
+
     svg.appendChild(path);
     closeButton.appendChild(svg);
-    
+
     headerDiv.appendChild(title);
     headerDiv.appendChild(closeButton);
-    
+
     const form = document.createElement('form');
     form.id = 'editBPDForm';
-    
+
     const formGrid = document.createElement('div');
     formGrid.className = 'grid grid-cols-1 md:grid-cols-2 gap-4';
-    
+
     // Create form fields with current values
     const fields = [
         { label: 'Nama Audit', id: 'editNamaAudit', type: 'text', value: record.nama_audit, required: true },
@@ -213,22 +214,22 @@ export function openBPDEditModal(record, container, year = null) {
         { label: 'Periode Awal', id: 'editPeriodeAwal', type: 'date', value: record.periode_awal, required: true },
         { label: 'Periode Akhir', id: 'editPeriodeAkhir', type: 'date', value: record.periode_akhir, required: true },
         { label: 'Lama Audit (hari)', id: 'editLamaAudit', type: 'number', value: record.lama_audit, min: '1', required: true },
-        { label: 'Biaya Berangkat', id: 'editBiayaBerangkat', type: 'number', value: record.biaya_berangkat, min: '0', step: '0.01', required: true },
-        { label: 'Biaya Penginapan', id: 'editBiayaPenginapan', type: 'number', value: record.biaya_penginapan, min: '0', step: '0.01', required: true },
-        { label: 'Biaya Pulang', id: 'editBiayaPulang', type: 'number', value: record.biaya_pulang, min: '0', step: '0.01', required: true },
-        { label: 'Total Akomodasi', id: 'editTotalAkomodasi', type: 'number', value: record.total_akomodasi, min: '0', step: '0.01', readonly: true },
-        { label: 'Rincian Biaya Dinas', id: 'editRincianBiayaDinas', type: 'number', value: record.rincian_biaya_dinas, min: '0', step: '0.01', required: true },
-        { label: 'Total Akomodasi + Biaya Dinas', id: 'editTotalAkomodasiBiayaDinas', type: 'number', value: record.total_akomodasi_biaya_dinas, min: '0', step: '0.01', readonly: true },
-        { label: 'Realisasi', id: 'editRealisasi', type: 'number', value: record.realisasi, min: '0', step: '0.01', required: true }
+        { label: 'Biaya Berangkat', id: 'editBiayaBerangkat', type: 'text', value: formatNumberWithDots(record.biaya_berangkat), required: true },
+        { label: 'Biaya Penginapan', id: 'editBiayaPenginapan', type: 'text', value: formatNumberWithDots(record.biaya_penginapan), required: true },
+        { label: 'Biaya Pulang', id: 'editBiayaPulang', type: 'text', value: formatNumberWithDots(record.biaya_pulang), required: true },
+        { label: 'Total Akomodasi', id: 'editTotalAkomodasi', type: 'text', value: formatNumberWithDots(record.total_akomodasi), readonly: true },
+        { label: 'Rincian Biaya Dinas', id: 'editRincianBiayaDinas', type: 'text', value: formatNumberWithDots(record.rincian_biaya_dinas), required: true },
+        { label: 'Total Akomodasi + Biaya Dinas', id: 'editTotalAkomodasiBiayaDinas', type: 'text', value: formatNumberWithDots(record.total_akomodasi_biaya_dinas), readonly: true },
+        { label: 'Realisasi', id: 'editRealisasi', type: 'text', value: formatNumberWithDots(record.realisasi), required: true }
     ];
-    
+
     fields.forEach(field => {
         const fieldDiv = document.createElement('div');
-        
+
         const fieldLabel = document.createElement('label');
         fieldLabel.className = 'form-label';
         fieldLabel.textContent = field.label;
-        
+
         const fieldInput = document.createElement('input');
         fieldInput.type = field.type;
         fieldInput.id = field.id;
@@ -238,10 +239,10 @@ export function openBPDEditModal(record, container, year = null) {
         if (field.min) fieldInput.min = field.min;
         if (field.step) fieldInput.step = field.step;
         if (field.readonly) fieldInput.readOnly = true;
-        
+
         fieldDiv.appendChild(fieldLabel);
         fieldDiv.appendChild(fieldInput);
-        
+
         if (field.id === 'editLamaAudit') {
             const periodError = document.createElement('div');
             periodError.id = 'editPeriodeError';
@@ -249,53 +250,58 @@ export function openBPDEditModal(record, container, year = null) {
             periodError.textContent = 'Periode akhir harus setelah atau sama dengan periode awal';
             fieldDiv.appendChild(periodError);
         }
-        
+
         formGrid.appendChild(fieldDiv);
     });
-    
+
     const buttonDiv = document.createElement('div');
     buttonDiv.className = 'flex justify-end space-x-3 mt-4';
-    
+
     const cancelBtn = document.createElement('button');
     cancelBtn.type = 'button';
     cancelBtn.id = 'cancelEditBPD';
     cancelBtn.className = 'px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50';
     cancelBtn.textContent = 'Cancel';
-    
+
     const submitBtn = document.createElement('button');
     submitBtn.type = 'submit';
     submitBtn.className = 'px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600';
     submitBtn.textContent = 'Update';
-    
+
     buttonDiv.appendChild(cancelBtn);
     buttonDiv.appendChild(submitBtn);
-    
+
     form.appendChild(formGrid);
     form.appendChild(buttonDiv);
-    
+
     modalContent.appendChild(headerDiv);
     modalContent.appendChild(form);
     modal.appendChild(modalContent);
-    
+
     // Add modal to the page
     document.body.appendChild(modal);
-    
+
+    // Setup number formatting
+    ['editBiayaBerangkat', 'editBiayaPenginapan', 'editBiayaPulang', 'editRincianBiayaDinas', 'editRealisasi', 'editTotalAkomodasi', 'editTotalAkomodasiBiayaDinas'].forEach(id => {
+        setupNumberFormatting(id);
+    });
+
     // Add event listeners
     document.getElementById('closeEditBPDModal').addEventListener('click', closeEditBPDModal);
     document.getElementById('cancelEditBPD').addEventListener('click', closeEditBPDModal);
-    
+
     // Add form submission handler
     document.getElementById('editBPDForm').addEventListener('submit', (e) => {
         e.preventDefault();
         handleEditSubmit(record.id, record.total_akomodasi_biaya_dinas, container, year);
     });
-    
+
     // Add auto-calculation for total fields
     setupEditFormCalculations();
-    
+
     // Add form validation
     setupEditFormValidation();
-    
+
     // Initial calculation
     calculateEditTotals();
 }
@@ -312,25 +318,25 @@ function closeEditBPDModal() {
 async function saveBPDBudget() {
     const yearElement = document.getElementById('bpdBudgetYear');
     const amountElement = document.getElementById('bpdBudgetAmount');
-    
+
     if (!yearElement || !amountElement) {
         alert('Budget form elements not found. Please try again.');
         return;
     }
-    
+
     const year = parseInt(yearElement.value);
-    const amount = parseFloat(amountElement.value);
-    
+    const amount = parseFormattedNumber(amountElement.value);
+
     if (!year || isNaN(year) || year < 2000 || year > 2100) {
         alert('Please enter a valid year (2000-2100)');
         return;
     }
-    
-    if (!amount || isNaN(amount) || amount < 0) {
+
+    if (isNaN(amount) || amount < 0) {
         alert('Please enter a valid budget amount');
         return;
     }
-    
+
     try {
         // Check if a budget record already exists for this year
         const { data: existingBudget, error: fetchError } = await supabase
@@ -338,18 +344,18 @@ async function saveBPDBudget() {
             .select('id, budget_awal, budget_sisa')
             .eq('tahun', year)
             .single();
-        
+
         if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 means no rows found
             console.error('Error fetching existing budget record:', fetchError);
             throw fetchError;
         }
-        
+
         let result;
         if (existingBudget) {
             // Update existing budget record
             const amountDifference = amount - existingBudget.budget_awal;
             const newBudgetSisa = existingBudget.budget_sisa + amountDifference;
-            
+
             result = await supabase
                 .from('bpd_budget_master')
                 .update({
@@ -358,9 +364,9 @@ async function saveBPDBudget() {
                     updated_at: new Date().toISOString()
                 })
                 .eq('id', existingBudget.id);
-            
+
             if (result.error) throw result.error;
-            
+
             // Add a budget adjustment transaction
             await supabase
                 .from('bpd_budget_transactions')
@@ -383,12 +389,12 @@ async function saveBPDBudget() {
                     updated_at: new Date().toISOString()
                 }]);
         }
-        
+
         if (result.error) throw result.error;
-        
-        alert('BPD Budget saved successfully!');
+
+        showSuccessModal('Anggaran BPD berhasil disimpan!', 'Anggaran Tersimpan');
         closeBudgetModal();
-        
+
         // Reload BPD content to reflect changes
         const container = document.querySelector('.bpd-container')?.closest('[id]') || document.querySelector('#app');
         if (container) {
@@ -400,7 +406,7 @@ async function saveBPDBudget() {
                 await loadBPDContent(container);
             }
         }
-        
+
     } catch (error) {
         console.error('Error saving BPD budget:', error);
         alert('Error saving BPD budget: ' + error.message);
@@ -412,30 +418,6 @@ let currentChartData = [];
 let refreshInterval;
 let realtimeSubscription;
 
-// Function to show toast notifications
-function showToast(message, type = 'success') {
-    const toastContainer = document.getElementById('toastContainer');
-    if (!toastContainer) return;
-    
-    const toast = document.createElement('div');
-    toast.className = `px-4 py-2 rounded shadow-lg text-white font-medium transform transition duration-300 ease-in-out toast toast-${type}`;
-    toast.textContent = message;
-    
-    if (type === 'success') {
-        toast.classList.add('bg-green-500');
-    } else if (type === 'error') {
-        toast.classList.add('bg-red-500');
-    } else {
-        toast.classList.add('bg-blue-500');
-    }
-    
-    toastContainer.appendChild(toast);
-    
-    // Remove toast after 3 seconds
-    setTimeout(() => {
-        toast.remove();
-    }, 3000);
-}
 
 // Function to fetch BPD data
 // Fetches all BPD data for chart, summary cards, and table
@@ -447,16 +429,16 @@ async function fetchBpdData(year = null) {
             .select('nama_audit, total_akomodasi_biaya_dinas, periode_awal, periode_akhir')
             .order('total_akomodasi_biaya_dinas', { ascending: false })
             .limit(100);
-        
+
         // Apply year filter if provided
         if (year) {
             query = applyYearFilter(query, year);
         }
-        
+
         const { data: allBPDData, error: allBpdError } = await query;
-        
+
         if (allBpdError) throw allBpdError;
-        
+
         // Aggregate data by nama_audit for the pie chart
         const aggregatedData = {};
         allBPDData.forEach(record => {
@@ -468,78 +450,78 @@ async function fetchBpdData(year = null) {
                 aggregatedData[auditName] = cost;
             }
         });
-        
+
         // Convert to array format for chart
         const chartData = Object.keys(aggregatedData).map(auditName => ({
             nama_audit: auditName,
             total_biaya: aggregatedData[auditName]
         }));
-        
+
         // Fetch top 3 highest BPD costs
         let top3Query = supabase
             .from('bpd_master')
             .select('nama_audit, total_akomodasi_biaya_dinas, periode_awal, periode_akhir')
             .order('total_akomodasi_biaya_dinas', { ascending: false })
             .limit(3);
-        
+
         // Apply year filter if provided
         if (year) {
             top3Query = applyYearFilter(top3Query, year);
         }
-        
+
         const { data: top3, error: top3Error } = await top3Query;
-        
+
         if (top3Error) throw top3Error;
-        
+
         // Fetch bottom 3 lowest BPD costs
         let bottom3Query = supabase
             .from('bpd_master')
             .select('nama_audit, total_akomodasi_biaya_dinas, periode_awal, periode_akhir')
             .order('total_akomodasi_biaya_dinas', { ascending: true })
             .limit(3);
-        
+
         // Apply year filter if provided
         if (year) {
             bottom3Query = applyYearFilter(bottom3Query, year);
         }
-        
+
         const { data: bottom3, error: bottom3Error } = await bottom3Query;
-        
+
         if (bottom3Error) throw bottom3Error;
-        
+
         // Fetch detailed BPD records
         let bpdDataQuery = supabase
             .from('bpd_master')
             .select('*')
             .order('created_at', { ascending: false });
-        
+
         // Apply year filter if provided
         if (year) {
             bpdDataQuery = applyYearFilter(bpdDataQuery, year);
         }
-        
+
         const { data: bpdData, error: bpdError } = await bpdDataQuery;
-        
+
         if (bpdError) throw bpdError;
-        
+
         // Fetch budget information
         let budgetQuery = supabase
             .from('bpd_budget_master')
             .select('*')
             .order('tahun', { ascending: false });
-        
+
         // Apply year filter if provided
         if (year) {
             budgetQuery = budgetQuery.eq('tahun', year);
         }
-        
+
         const { data: budgetData, error: budgetError } = await budgetQuery;
-        
+
         if (budgetError) {
             console.error('Error fetching budget data:', budgetError);
             // Continue without budget data if there's an error
         }
-        
+
         return {
             chartData,
             top3,
@@ -562,37 +544,37 @@ export async function loadBPDContent(container, year = null) {
         if (refreshInterval) {
             clearInterval(refreshInterval);
         }
-        
+
         // Unsubscribe from any existing realtime subscription
         if (realtimeSubscription) {
             await supabase.removeChannel(realtimeSubscription);
         }
-        
+
         // Fetch initial data
         const { chartData, top3, bottom3, bpdData, budgetData } = await fetchBpdData(year);
-        
+
         // Store references to current data
         currentBPDData = bpdData;
         currentChartData = chartData;
-        
+
         // Calculate budget summary based on budgetData
         let totalBudget = 0;
         let totalSpent = 0;
         let remainingBudget = 0;
-        
+
         if (budgetData && budgetData.length > 0) {
             // Calculate total budget from all budget records
             budgetData.forEach(budget => {
                 totalBudget += parseFloat(budget.budget_awal) || 0;
                 remainingBudget += parseFloat(budget.budget_sisa) || 0;
             });
-            
+
             // Calculate total spent from bpd records
             bpdData.forEach(record => {
                 totalSpent += parseFloat(record.total_akomodasi_biaya_dinas) || 0;
             });
         }
-        
+
         // Render the UI
         container.innerHTML = `
             <div class="bpd-container">
@@ -722,31 +704,31 @@ export async function loadBPDContent(container, year = null) {
                                 </div>
                                 <div>
                                     <label class="form-label">Biaya Berangkat</label>
-                                    <input type="number" id="biayaBerangkat" class="form-control" min="0" step="0.01" required>
+                                    <input type="text" id="biayaBerangkat" class="form-control" placeholder="0" required>
                                 </div>
                                 <div>
                                     <label class="form-label">Biaya Penginapan</label>
-                                    <input type="number" id="biayaPenginapan" class="form-control" min="0" step="0.01" required>
+                                    <input type="text" id="biayaPenginapan" class="form-control" placeholder="0" required>
                                 </div>
                                 <div>
                                     <label class="form-label">Biaya Pulang</label>
-                                    <input type="number" id="biayaPulang" class="form-control" min="0" step="0.01" required>
+                                    <input type="text" id="biayaPulang" class="form-control" placeholder="0" required>
                                 </div>
                                 <div>
                                     <label class="form-label">Total Akomodasi</label>
-                                    <input type="number" id="totalAkomodasi" class="form-control" min="0" step="0.01" readonly>
+                                    <input type="text" id="totalAkomodasi" class="form-control" placeholder="0" readonly>
                                 </div>
                                 <div>
                                     <label class="form-label">Rincian Biaya Dinas</label>
-                                    <input type="number" id="rincianBiayaDinas" class="form-control" min="0" step="0.01" required>
+                                    <input type="text" id="rincianBiayaDinas" class="form-control" placeholder="0" required>
                                 </div>
                                 <div>
                                     <label class="form-label">Total Akomodasi + Biaya Dinas</label>
-                                    <input type="number" id="totalAkomodasiBiayaDinas" class="form-control" min="0" step="0.01" readonly>
+                                    <input type="text" id="totalAkomodasiBiayaDinas" class="form-control" placeholder="0" readonly>
                                 </div>
                                 <div>
                                     <label class="form-label">Realisasi</label>
-                                    <input type="number" id="realisasi" class="form-control" min="0" step="0.01" required>
+                                    <input type="text" id="realisasi" class="form-control" placeholder="0" required>
                                 </div>
                             </div>
                             <div class="flex justify-end space-x-2 pt-4">
@@ -768,7 +750,7 @@ export async function loadBPDContent(container, year = null) {
                                     <th>Periode</th>
                                     <th>Lama Audit</th>
                                     <th>Total Biaya</th>
-                                    <th>Actions</th>
+                                    ${admin ? '<th>Actions</th>' : ''}
                                 </tr>
                             </thead>
                             <tbody id="bpdTableBody">
@@ -780,18 +762,18 @@ export async function loadBPDContent(container, year = null) {
             </div>
             
         `;
-        
+
         // Initialize chart after a short delay to ensure DOM is fully rendered
         setTimeout(() => {
             initBPDChart(chartData);
         }, 100);
-        
+
         // Apply pagination to the table
         const pagination = applyPagination('bpdTableContainer', bpdData, (record) => {
             // This filter function will be used for search functionality
             const searchTerm = document.getElementById('searchInput')?.value.toLowerCase() || '';
             if (!searchTerm) return true;
-            
+
             return (
                 (record.nama_audit && record.nama_audit.toLowerCase().includes(searchTerm)) ||
                 (record.nama_pemesan && record.nama_pemesan.toLowerCase().includes(searchTerm)) ||
@@ -800,48 +782,48 @@ export async function loadBPDContent(container, year = null) {
                 (record.no_bpd && record.no_bpd.toLowerCase().includes(searchTerm))
             );
         });
-        
+
         // Function to render table rows
         function renderTableRows(data) {
             const tableBody = document.getElementById('bpdTableBody');
             if (!tableBody) return;
-            
+
             if (data.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="8" class="text-center py-4">No data available</td></tr>';
+                tableBody.innerHTML = `<tr><td colspan="${admin ? 9 : 8}" class="text-center py-4">No data available</td></tr>`;
                 return;
             }
-            
+
             // Clear existing content
             tableBody.innerHTML = '';
-            
+
             // Create table rows using DOM API
             data.forEach(record => {
                 const row = document.createElement('tr');
-                
+
                 const namaAuditCell = document.createElement('td');
                 namaAuditCell.textContent = record.nama_audit || '-';
-                
+
                 const namaPemesanCell = document.createElement('td');
                 namaPemesanCell.textContent = record.nama_pemesan || '-';
-                
+
                 const jenisAuditCell = document.createElement('td');
                 jenisAuditCell.textContent = record.jenis_audit || '-';
-                
+
                 const noSpdCell = document.createElement('td');
                 noSpdCell.textContent = record.no_spd || '-';
-                
+
                 const noBpdCell = document.createElement('td');
                 noBpdCell.textContent = record.no_bpd || '-';
-                
+
                 const periodeCell = document.createElement('td');
                 periodeCell.textContent = (record.periode_awal || '-') + ' S.d ' + (record.periode_akhir || '-');
-                
+
                 const lamaAuditCell = document.createElement('td');
                 lamaAuditCell.textContent = (record.lama_audit || '-') + ' Hari';
-                
+
                 const totalBiayaCell = document.createElement('td');
                 totalBiayaCell.textContent = formatCurrency(record.total_akomodasi_biaya_dinas || 0);
-                
+
                 // Create actions cell for admin users
                 const actionsCell = document.createElement('td');
                 actionsCell.className = 'actions-cell';
@@ -851,19 +833,19 @@ export async function loadBPDContent(container, year = null) {
                     if (isAdmin) {
                         // Edit button
                         const editButton = document.createElement('button');
-                        editButton.className = 'edit-btn text-blue-500 hover:text-blue-700 cursor-pointer mr-2';
-                        editButton.innerHTML = '✏️'; // Edit icon
+                        editButton.className = 'edit-btn text-blue-500 hover:text-blue-700 transition-colors p-1 mr-1';
+                        editButton.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>`;
                         editButton.title = 'Edit';
                         editButton.onclick = () => openBPDEditModal(record, container, year);
                         actionsCell.appendChild(editButton);
-                        
-                        // Delete button (temporarily disabled per task requirements)
-                        // const deleteButton = document.createElement('button');
-                        // deleteButton.className = 'delete-btn text-red-500 hover:text-red-700 cursor-pointer';
-                        // deleteButton.innerHTML = '🗑️'; // Trash icon
-                        // deleteButton.title = 'Delete';
-                        // deleteButton.onclick = () => handleDeleteRecord(record.id, container, year);
-                        // actionsCell.appendChild(deleteButton);
+
+                        // Delete button
+                        const deleteButton = document.createElement('button');
+                        deleteButton.className = 'delete-btn text-red-500 hover:text-red-700 transition-colors p-1';
+                        deleteButton.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>`;
+                        deleteButton.title = 'Delete';
+                        deleteButton.onclick = () => handleDeleteRecord(record.id, container, year);
+                        actionsCell.appendChild(deleteButton);
                     }
                 });
 
@@ -875,7 +857,11 @@ export async function loadBPDContent(container, year = null) {
                 row.appendChild(periodeCell);
                 row.appendChild(lamaAuditCell);
                 row.appendChild(totalBiayaCell);
-                row.appendChild(actionsCell); // Add actions cell
+                
+                // Only append actions cell if user is admin
+                if (admin) {
+                    row.appendChild(actionsCell); // Add actions cell
+                }
 
                 tableBody.appendChild(row);
             });
@@ -886,7 +872,7 @@ export async function loadBPDContent(container, year = null) {
 
         // Initial table render
         pagination.render();
-        
+
         // Add event listeners for table export buttons
         document.getElementById('exportExcelTable').addEventListener('click', () => {
             // Filter data to include only required columns (nama_audit to realisasi)
@@ -909,7 +895,7 @@ export async function loadBPDContent(container, year = null) {
             }));
             exportToExcel(filteredData, `BPD_Records${year ? '_' + year : ''}`);
         });
-        
+
         document.getElementById('exportPDFTable').addEventListener('click', () => {
             // Filter data to include only required columns (nama_audit to realisasi)
             const filteredData = bpdData.map(record => ({
@@ -931,7 +917,7 @@ export async function loadBPDContent(container, year = null) {
             }));
             exportToPDF(filteredData, `BPD Records${year ? ' ' + year : ''}`);
         });
-        
+
         // Add search functionality
         const searchInputEl = document.getElementById('searchInput');
         if (searchInputEl) {
@@ -940,7 +926,7 @@ export async function loadBPDContent(container, year = null) {
                 pagination.render();
             });
         }
-        
+
         // Add event listeners for budget button (only for admin users)
         if (admin) {
             const setBPDBudgetBtn = document.getElementById('setBPDBudgetBtn');
@@ -949,15 +935,19 @@ export async function loadBPDContent(container, year = null) {
                     openBPDBudgetModal('BPD', year || 'All');
                 });
             }
-            
+
             // Add event listeners for inline form (only for admin users)
             const addDataBtn = document.getElementById('addDataBtn');
             if (addDataBtn) {
                 addDataBtn.addEventListener('click', () => {
                     document.getElementById('addDataFormContainer').classList.remove('hidden');
+                    // Setup number formatting
+                    ['biayaBerangkat', 'biayaPenginapan', 'biayaPulang', 'rincianBiayaDinas', 'realisasi', 'totalAkomodasi', 'totalAkomodasiBiayaDinas'].forEach(id => {
+                        setupNumberFormatting(id);
+                    });
                 });
             }
-            
+
             const cancelAddDataBtn = document.getElementById('cancelAddDataBtn');
             if (cancelAddDataBtn) {
                 cancelAddDataBtn.addEventListener('click', () => {
@@ -966,7 +956,7 @@ export async function loadBPDContent(container, year = null) {
                     document.getElementById('addDataForm').reset();
                 });
             }
-            
+
             const addDataForm = document.getElementById('addDataForm');
             if (addDataForm) {
                 // Add form submission handler
@@ -980,10 +970,10 @@ export async function loadBPDContent(container, year = null) {
                         await loadBPDContent(container, year);
                     }
                 });
-                
+
                 // Add auto-calculation for total fields
                 setupFormCalculations();
-                
+
                 // Add form validation
                 setupFormValidation();
             }
@@ -994,18 +984,18 @@ export async function loadBPDContent(container, year = null) {
         const errorContainer = document.createElement('div');
         errorContainer.className = 'bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative';
         errorContainer.setAttribute('role', 'alert');
-        
+
         const errorStrong = document.createElement('strong');
         errorStrong.className = 'font-bold';
         errorStrong.textContent = 'Error! ';
-        
+
         const errorSpan = document.createElement('span');
         errorSpan.className = 'block sm:inline';
         errorSpan.textContent = 'Failed to load BPD data: ' + error.message;
-        
+
         errorContainer.appendChild(errorStrong);
         errorContainer.appendChild(errorSpan);
-        
+
         container.innerHTML = '';
         container.appendChild(errorContainer);
     }
@@ -1021,11 +1011,11 @@ async function fetchBpdDataByYear(year) {
             .select('nama_audit, total_akomodasi_biaya_dinas, periode_awal, periode_akhir')
             .order('total_akomodasi_biaya_dinas', { ascending: false })
             .limit(100), year);
-        
+
         const { data: allBPDData, error: allBpdError } = await query;
-        
+
         if (allBpdError) throw allBpdError;
-        
+
         // Aggregate data by nama_audit for the pie chart
         const aggregatedData = {};
         allBPDData.forEach(record => {
@@ -1037,56 +1027,56 @@ async function fetchBpdDataByYear(year) {
                 aggregatedData[auditName] = cost;
             }
         });
-        
+
         // Convert to array format for chart
         const chartData = Object.keys(aggregatedData).map(auditName => ({
             nama_audit: auditName,
             total_biaya: aggregatedData[auditName]
         }));
-        
+
         // Fetch top 3 highest BPD costs for the year
         const top3Query = applyYearFilter(supabase
             .from('bpd_master')
             .select('nama_audit, total_akomodasi_biaya_dinas, periode_awal, periode_akhir')
             .order('total_akomodasi_biaya_dinas', { ascending: false })
             .limit(3), year);
-        
+
         const { data: top3, error: top3Error } = await top3Query;
-        
+
         if (top3Error) throw top3Error;
-        
+
         // Fetch bottom 3 lowest BPD costs for the year
         const bottom3Query = applyYearFilter(supabase
             .from('bpd_master')
             .select('nama_audit, total_akomodasi_biaya_dinas, periode_awal, periode_akhir')
             .order('total_akomodasi_biaya_dinas', { ascending: true })
             .limit(3), year);
-        
+
         const { data: bottom3, error: bottom3Error } = await bottom3Query;
-        
+
         if (bottom3Error) throw bottom3Error;
-        
+
         // Fetch detailed BPD records for the year
         const bpdDataQuery = applyYearFilter(supabase
             .from('bpd_master')
             .select('*')
             .order('created_at', { ascending: false }), year);
-        
+
         const { data: bpdData, error: bpdError } = await bpdDataQuery;
-        
+
         if (bpdError) throw bpdError;
-        
+
         // Fetch budget information for the specific year
         const { data: budgetData, error: budgetError } = await supabase
             .from('bpd_budget_master')
             .select('*')
             .eq('tahun', year);
-        
+
         if (budgetError) {
             console.error('Error fetching budget data:', budgetError);
             // Continue without budget data if there's an error
         }
-        
+
         return {
             chartData,
             top3,
@@ -1109,50 +1099,50 @@ export async function loadBPDContentByYear(container, year) {
         if (refreshInterval) {
             clearInterval(refreshInterval);
         }
-        
+
         // Unsubscribe from any existing realtime subscription
         if (realtimeSubscription) {
             await supabase.removeChannel(realtimeSubscription);
         }
-        
+
         // Fetch initial data filtered by year
         const { chartData, top3, bottom3, bpdData, budgetData } = await fetchBpdDataByYear(year);
-        
+
         // Store references to current data
         currentBPDData = bpdData;
         currentChartData = chartData;
-        
+
         // Calculate budget summary based on budgetData
         let totalBudget = 0;
         let totalSpent = 0;
         let remainingBudget = 0;
-        
+
         if (budgetData && budgetData.length > 0) {
             // Calculate total budget from all budget records
             budgetData.forEach(budget => {
                 totalBudget += parseFloat(budget.budget_awal) || 0;
                 remainingBudget += parseFloat(budget.budget_sisa) || 0;
             });
-            
+
             // Calculate total spent from bpd records for the specific year
             bpdData.forEach(record => {
                 totalSpent += parseFloat(record.total_akomodasi_biaya_dinas) || 0;
             });
         }
-        
+
         // Create the UI elements
         const bpdContainer = document.createElement('div');
         bpdContainer.className = 'bpd-container';
-        
+
         const headerDiv = document.createElement('div');
         headerDiv.className = 'bpd-header flex flex-wrap items-center justify-between';
-        
+
         const title = document.createElement('h2');
         title.className = 'bpd-title';
         title.textContent = 'BPD (Biaya Perjalanan Dinas) ' + year;
-        
+
         headerDiv.appendChild(title);
-        
+
         if (admin) {
             const budgetBtn = document.createElement('button');
             budgetBtn.id = 'setBPDBudgetBtn';
@@ -1160,219 +1150,219 @@ export async function loadBPDContentByYear(container, year) {
             budgetBtn.textContent = 'Set Budget';
             headerDiv.appendChild(budgetBtn);
         }
-        
+
         bpdContainer.appendChild(headerDiv);
-        
+
         // Budget Summary Cards
         const summaryGrid = document.createElement('div');
         summaryGrid.className = 'grid grid-cols-4 md:grid-cols-4 gap-4 mb-4';
-        
+
         const totalBudgetCard = document.createElement('div');
         totalBudgetCard.className = 'summary-card';
-        
+
         const totalBudgetHeader = document.createElement('h3');
         totalBudgetHeader.className = 'summary-card-header';
         totalBudgetHeader.textContent = 'Total Budget ' + year;
-        
+
         const totalBudgetValue = document.createElement('p');
         totalBudgetValue.className = 'summary-card-value positive';
         totalBudgetValue.textContent = formatCurrency(totalBudget);
-        
+
         totalBudgetCard.appendChild(totalBudgetHeader);
         totalBudgetCard.appendChild(totalBudgetValue);
         summaryGrid.appendChild(totalBudgetCard);
-        
+
         const totalSpentCard = document.createElement('div');
         totalSpentCard.className = 'summary-card';
-        
+
         const totalSpentHeader = document.createElement('h3');
         totalSpentHeader.className = 'summary-card-header';
         totalSpentHeader.textContent = 'Total Spent ' + year;
-        
+
         const totalSpentValue = document.createElement('p');
         totalSpentValue.className = 'summary-card-value negative';
         totalSpentValue.textContent = formatCurrency(totalSpent);
-        
+
         totalSpentCard.appendChild(totalSpentHeader);
         totalSpentCard.appendChild(totalSpentValue);
         summaryGrid.appendChild(totalSpentCard);
-        
+
         const remainingBudgetCard = document.createElement('div');
         remainingBudgetCard.className = 'summary-card';
-        
+
         const remainingBudgetHeader = document.createElement('h3');
         remainingBudgetHeader.className = 'summary-card-header';
         remainingBudgetHeader.textContent = 'Remaining Budget ' + year;
-        
+
         const remainingBudgetValue = document.createElement('p');
         remainingBudgetValue.className = 'summary-card-value neutral';
         remainingBudgetValue.textContent = formatCurrency(remainingBudget);
-        
+
         remainingBudgetCard.appendChild(remainingBudgetHeader);
         remainingBudgetCard.appendChild(remainingBudgetValue);
         summaryGrid.appendChild(remainingBudgetCard);
-        
+
         const utilizationCard = document.createElement('div');
         utilizationCard.className = 'summary-card';
-        
+
         const utilizationHeader = document.createElement('h3');
         utilizationHeader.className = 'summary-card-header';
         utilizationHeader.textContent = 'Budget Utilization';
-        
+
         const utilizationValue = document.createElement('p');
         utilizationValue.className = 'summary-card-value neutral';
         utilizationValue.textContent = totalBudget > 0 ? ((totalSpent / totalBudget) * 100).toFixed(2) + '%' : '0%';
-        
+
         utilizationCard.appendChild(utilizationHeader);
         utilizationCard.appendChild(utilizationValue);
         summaryGrid.appendChild(utilizationCard);
-        
+
         bpdContainer.appendChild(summaryGrid);
-        
+
         // Chart Section
         const chartContainer = document.createElement('div');
         chartContainer.className = 'chart-container';
-        
+
         const chartHeader = document.createElement('h3');
         chartHeader.className = 'chart-header';
         chartHeader.textContent = 'Total Biaya per Audit - ' + year;
-        
+
         const chartWrapper = document.createElement('div');
         chartWrapper.className = 'chart-wrapper';
-        
+
         const canvas = document.createElement('canvas');
         canvas.id = 'bpdChart';
-        
+
         chartWrapper.appendChild(canvas);
         chartContainer.appendChild(chartHeader);
         chartContainer.appendChild(chartWrapper);
         bpdContainer.appendChild(chartContainer);
-        
+
         const topBottomGrid = document.createElement('div');
         topBottomGrid.className = 'grid grid-cols-2 md:grid-cols-2 gap-2 mb-5';
-        
+
         // TOP 3 Section
         const top3Card = document.createElement('div');
         top3Card.className = 'summary-card';
-        
+
         const top3Header = document.createElement('h3');
         top3Header.className = 'summary-card-header mb-4';
         top3Header.textContent = 'Top 3 Highest BPD ' + year + ' \u{1F53A}';
-        
+
         const top3Content = document.createElement('div');
         top3Content.className = 'space-y-4';
-        
+
         top3.forEach((record, index) => {
             const top3Item = document.createElement('div');
             top3Item.className = 'bg-gradient-to-r from-red-50 to-red-100 shadow rounded-lg p-4 border border-red-200';
-            
+
             const top3ItemHeader = document.createElement('div');
             top3ItemHeader.className = 'flex justify-between items-center';
-            
+
             const top3ItemTitle = document.createElement('h4');
             top3ItemTitle.className = 'font-semibold text-gray-800';
             top3ItemTitle.textContent = record.nama_audit || 'Unknown';
-            
+
             const top3ItemNumber = document.createElement('span');
             top3ItemNumber.className = 'text-sm text-gray-600';
             top3ItemNumber.textContent = '#' + (index + 1);
-            
+
             top3ItemHeader.appendChild(top3ItemTitle);
             top3ItemHeader.appendChild(top3ItemNumber);
-            
+
             const top3ItemValue = document.createElement('p');
             top3ItemValue.className = 'text-xl font-bold text-red-600 mt-2';
             top3ItemValue.textContent = formatCurrency(record.total_akomodasi_biaya_dinas || 0);
-            
+
             top3Item.appendChild(top3ItemHeader);
             top3Item.appendChild(top3ItemValue);
             top3Content.appendChild(top3Item);
         });
-        
+
         top3Card.appendChild(top3Header);
         top3Card.appendChild(top3Content);
         topBottomGrid.appendChild(top3Card);
-        
+
         // BOTTOM 3 Section
         const bottom3Card = document.createElement('div');
         bottom3Card.className = 'summary-card';
-        
+
         const bottom3Header = document.createElement('h3');
         bottom3Header.className = 'summary-card-header mb-4';
         bottom3Header.textContent = 'Bottom 3 Lowest BPD ' + year + ' \u{1F53B}';
-        
+
         const bottom3Content = document.createElement('div');
         bottom3Content.className = 'space-y-4';
-        
+
         bottom3.forEach((record, index) => {
             const bottom3Item = document.createElement('div');
             bottom3Item.className = 'bg-gradient-to-r from-green-50 to-green-100 shadow rounded-lg p-4 border border-green-200';
-            
+
             const bottom3ItemHeader = document.createElement('div');
             bottom3ItemHeader.className = 'flex justify-between items-center';
-            
+
             const bottom3ItemTitle = document.createElement('h4');
             bottom3ItemTitle.className = 'font-semibold text-gray-800';
             bottom3ItemTitle.textContent = record.nama_audit || 'Unknown';
-            
+
             const bottom3ItemNumber = document.createElement('span');
             bottom3ItemNumber.className = 'text-sm text-gray-600';
             bottom3ItemNumber.textContent = '#' + (index + 1);
-            
+
             bottom3ItemHeader.appendChild(bottom3ItemTitle);
             bottom3ItemHeader.appendChild(bottom3ItemNumber);
-            
+
             const bottom3ItemValue = document.createElement('p');
             bottom3ItemValue.className = 'text-xl font-bold text-green-600 mt-2';
             bottom3ItemValue.textContent = formatCurrency(record.total_akomodasi_biaya_dinas || 0);
-            
+
             bottom3Item.appendChild(bottom3ItemHeader);
             bottom3Item.appendChild(bottom3ItemValue);
             bottom3Content.appendChild(bottom3Item);
         });
-        
+
         bottom3Card.appendChild(bottom3Header);
         bottom3Card.appendChild(bottom3Content);
         topBottomGrid.appendChild(bottom3Card);
-        
+
         bpdContainer.appendChild(topBottomGrid);
-        
+
         // BPD Records Table
         const tableContainer = document.createElement('div');
         tableContainer.className = 'transactions-table-container';
         tableContainer.id = 'bpdTableContainer';
-        
+
         const tableHeader = document.createElement('div');
         tableHeader.className = 'transactions-table-header flex flex-wrap items-center justify-between gap-4';
-        
+
         const tableTitle = document.createElement('h3');
         tableTitle.className = 'transactions-table-title';
         tableTitle.textContent = 'Daftar Data BPD ' + year;
-        
+
         const tableControls = document.createElement('div');
         tableControls.className = 'flex flex-wrap items-center gap-2';
-        
+
         const searchInput = document.createElement('input');
         searchInput.type = 'text';
         searchInput.id = 'searchInput';
         searchInput.className = 'form-control border rounded px-2 py-1';
         searchInput.placeholder = 'Cari data...';
         searchInput.style.width = '300px';
-        
+
         const exportExcelBtn = document.createElement('button');
         exportExcelBtn.id = 'exportExcelTable';
         exportExcelBtn.className = 'export-button excel';
         exportExcelBtn.textContent = 'Excel';
-        
+
         const exportPDFBtn = document.createElement('button');
         exportPDFBtn.id = 'exportPDFTable';
         exportPDFBtn.className = 'export-button pdf';
         exportPDFBtn.textContent = 'PDF';
-        
+
         tableControls.appendChild(searchInput);
         tableControls.appendChild(exportExcelBtn);
         tableControls.appendChild(exportPDFBtn);
-        
+
         if (admin) {
             const addDataBtn = document.createElement('button');
             addDataBtn.id = 'addDataBtn';
@@ -1380,29 +1370,29 @@ export async function loadBPDContentByYear(container, year) {
             addDataBtn.textContent = '+ Tambah Data';
             tableControls.appendChild(addDataBtn);
         }
-        
+
         tableHeader.appendChild(tableTitle);
         tableHeader.appendChild(tableControls);
-        
+
         tableContainer.appendChild(tableHeader);
-        
+
         // Add Data Form (if admin)
         if (admin) {
             const addFormContainer = document.createElement('div');
             addFormContainer.id = 'addDataFormContainer';
             addFormContainer.className = 'hidden mt-4 mb-4 p-4 border border-gray-200 rounded-lg bg-gray-50';
-            
+
             const addFormTitle = document.createElement('h4');
             addFormTitle.className = 'text-lg font-bold mb-4';
             addFormTitle.textContent = 'Tambah Data BPD ' + year;
-            
+
             const addForm = document.createElement('form');
             addForm.id = 'addDataForm';
             addForm.className = 'space-y-4';
-            
+
             const formGrid = document.createElement('div');
             formGrid.className = 'grid grid-cols-1 md:grid-cols-2 gap-4';
-            
+
             // Create form fields
             const fields = [
                 { label: 'Nama Audit', id: 'namaAudit', type: 'text', required: true },
@@ -1413,22 +1403,22 @@ export async function loadBPDContentByYear(container, year) {
                 { label: 'Periode Awal', id: 'periodeAwal', type: 'date', required: true },
                 { label: 'Periode Akhir', id: 'periodeAkhir', type: 'date', required: true },
                 { label: 'Lama Audit (hari)', id: 'lamaAudit', type: 'number', min: '1', required: true },
-                { label: 'Biaya Berangkat', id: 'biayaBerangkat', type: 'number', min: '0', step: '0.01', required: true },
-                { label: 'Biaya Penginapan', id: 'biayaPenginapan', type: 'number', min: '0', step: '0.01', required: true },
-                { label: 'Biaya Pulang', id: 'biayaPulang', type: 'number', min: '0', step: '0.01', required: true },
-                { label: 'Total Akomodasi', id: 'totalAkomodasi', type: 'number', min: '0', step: '0.01', readonly: true },
-                { label: 'Rincian Biaya Dinas', id: 'rincianBiayaDinas', type: 'number', min: '0', step: '0.01', required: true },
-                { label: 'Total Akomodasi + Biaya Dinas', id: 'totalAkomodasiBiayaDinas', type: 'number', min: '0', step: '0.01', readonly: true },
-                { label: 'Realisasi', id: 'realisasi', type: 'number', min: '0', step: '0.01', required: true }
+                { label: 'Biaya Berangkat', id: 'biayaBerangkat', type: 'text', placeholder: '0', required: true },
+                { label: 'Biaya Penginapan', id: 'biayaPenginapan', type: 'text', placeholder: '0', required: true },
+                { label: 'Biaya Pulang', id: 'biayaPulang', type: 'text', placeholder: '0', required: true },
+                { label: 'Total Akomodasi', id: 'totalAkomodasi', type: 'text', placeholder: '0', readonly: true },
+                { label: 'Rincian Biaya Dinas', id: 'rincianBiayaDinas', type: 'text', placeholder: '0', required: true },
+                { label: 'Total Akomodasi + Biaya Dinas', id: 'totalAkomodasiBiayaDinas', type: 'text', placeholder: '0', readonly: true },
+                { label: 'Realisasi', id: 'realisasi', type: 'text', placeholder: '0', required: true }
             ];
-            
+
             fields.forEach(field => {
                 const fieldDiv = document.createElement('div');
-                
+
                 const fieldLabel = document.createElement('label');
                 fieldLabel.className = 'form-label';
                 fieldLabel.textContent = field.label;
-                
+
                 const fieldInput = document.createElement('input');
                 fieldInput.type = field.type;
                 fieldInput.id = field.id;
@@ -1437,10 +1427,10 @@ export async function loadBPDContentByYear(container, year) {
                 if (field.min) fieldInput.min = field.min;
                 if (field.step) fieldInput.step = field.step;
                 if (field.readonly) fieldInput.readOnly = true;
-                
+
                 fieldDiv.appendChild(fieldLabel);
                 fieldDiv.appendChild(fieldInput);
-                
+
                 if (field.id === 'lamaAudit') {
                     const periodError = document.createElement('div');
                     periodError.id = 'periodeError';
@@ -1448,84 +1438,84 @@ export async function loadBPDContentByYear(container, year) {
                     periodError.textContent = 'Periode akhir harus setelah atau sama dengan periode awal';
                     fieldDiv.appendChild(periodError);
                 }
-                
+
                 formGrid.appendChild(fieldDiv);
             });
-            
+
             const buttonDiv = document.createElement('div');
             buttonDiv.className = 'flex justify-end space-x-2 pt-4';
-            
+
             const cancelBtn = document.createElement('button');
             cancelBtn.type = 'button';
             cancelBtn.id = 'cancelAddDataBtn';
             cancelBtn.className = 'px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50';
             cancelBtn.textContent = 'Cancel';
-            
+
             const submitBtn = document.createElement('button');
             submitBtn.type = 'submit';
             submitBtn.className = 'px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600';
             submitBtn.textContent = 'Simpan';
-            
+
             buttonDiv.appendChild(cancelBtn);
             buttonDiv.appendChild(submitBtn);
-            
+
             addForm.appendChild(formGrid);
             addForm.appendChild(buttonDiv);
-            
+
             addFormContainer.appendChild(addFormTitle);
             addFormContainer.appendChild(addForm);
-            
+
             tableContainer.appendChild(addFormContainer);
         }
-        
+
         // Table
         const table = document.createElement('div');
         table.className = 'table-container';
-        
+
         const tableElement = document.createElement('table');
         tableElement.className = 'transactions-table';
-        
+
         const thead = document.createElement('thead');
         const headerRow = document.createElement('tr');
-        
-        const headers = ['Nama Audit', 'Nama Pemesan', 'Jenis Audit', 'No SPD', 'No BPD', 'Periode', 'Lama Audit', 'Total Biaya', 'Actions'];
-        
+
+        const headers = admin ? ['Nama Audit', 'Nama Pemesan', 'Jenis Audit', 'No SPD', 'No BPD', 'Periode', 'Lama Audit', 'Total Biaya', 'Actions'] : ['Nama Audit', 'Nama Pemesan', 'Jenis Audit', 'No SPD', 'No BPD', 'Periode', 'Lama Audit', 'Total Biaya'];
+
         headers.forEach(headerText => {
             const th = document.createElement('th');
             th.textContent = headerText;
             headerRow.appendChild(th);
         });
-        
+
         thead.appendChild(headerRow);
         tableElement.appendChild(thead);
-        
+
         const tbody = document.createElement('tbody');
         tbody.id = 'bpdTableBody';
-        
+
         // Add comment for table rows
         const comment = document.createComment('Table rows will be populated by pagination');
         tbody.appendChild(comment);
-        
+
         tableElement.appendChild(tbody);
         table.appendChild(tableElement);
         tableContainer.appendChild(table);
-        
+
         bpdContainer.appendChild(tableContainer);
-        
+
         container.innerHTML = '';
         container.appendChild(bpdContainer);
-        
+
         // Initialize chart after a short delay to ensure DOM is fully rendered
         setTimeout(() => {
             initBPDChart(chartData);
         }, 100);
-        
+
         // Apply pagination to the table
         const pagination = applyPagination('bpdTableContainer', bpdData, (record) => {
             // This filter function will be used for search functionality
             const searchTerm = document.getElementById('searchInput')?.value.toLowerCase() || '';
             if (!searchTerm) return true;
-            
+
             return (
                 (record.nama_audit && record.nama_audit.toLowerCase().includes(searchTerm)) ||
                 (record.nama_pemesan && record.nama_pemesan.toLowerCase().includes(searchTerm)) ||
@@ -1534,48 +1524,48 @@ export async function loadBPDContentByYear(container, year) {
                 (record.no_bpd && record.no_bpd.toLowerCase().includes(searchTerm))
             );
         });
-        
+
         // Function to render table rows
         function renderTableRows(data) {
             const tableBody = document.getElementById('bpdTableBody');
             if (!tableBody) return;
-            
+
             if (data.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="8" class="text-center py-4">No data available</td></tr>';
+                tableBody.innerHTML = `<tr><td colspan="${admin ? 9 : 8}" class="text-center py-4">No data available</td></tr>`;
                 return;
             }
-            
+
             // Clear existing content
             tableBody.innerHTML = '';
-            
+
             // Create table rows using DOM API
             data.forEach(record => {
                 const row = document.createElement('tr');
-                
+
                 const namaAuditCell = document.createElement('td');
                 namaAuditCell.textContent = record.nama_audit || '-';
-                
+
                 const namaPemesanCell = document.createElement('td');
                 namaPemesanCell.textContent = record.nama_pemesan || '-';
-                
+
                 const jenisAuditCell = document.createElement('td');
                 jenisAuditCell.textContent = record.jenis_audit || '-';
-                
+
                 const noSpdCell = document.createElement('td');
                 noSpdCell.textContent = record.no_spd || '-';
-                
+
                 const noBpdCell = document.createElement('td');
                 noBpdCell.textContent = record.no_bpd || '-';
-                
+
                 const periodeCell = document.createElement('td');
                 periodeCell.textContent = (record.periode_awal || '-') + ' S.d ' + (record.periode_akhir || '-');
-                
+
                 const lamaAuditCell = document.createElement('td');
                 lamaAuditCell.textContent = (record.lama_audit || '-') + ' Hari';
-                
+
                 const totalBiayaCell = document.createElement('td');
                 totalBiayaCell.textContent = formatCurrency(record.total_akomodasi_biaya_dinas || 0);
-                
+
                 // Create actions cell for admin users
                 const actionsCell = document.createElement('td');
                 actionsCell.className = 'actions-cell';
@@ -1585,19 +1575,25 @@ export async function loadBPDContentByYear(container, year) {
                     if (isAdmin) {
                         // Edit button
                         const editButton = document.createElement('button');
-                        editButton.className = 'edit-btn text-blue-500 hover:text-blue-700 cursor-pointer mr-2';
-                        editButton.innerHTML = '✏️'; // Edit icon
+                        editButton.className = 'edit-btn text-blue-500 hover:text-blue-700 transition-colors p-1 mr-1';
+                        editButton.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>`;
                         editButton.title = 'Edit';
-                        editButton.onclick = () => openBPDEditModal(record, container, year);
+                        editButton.onclick = () => {
+                            openBPDEditModal(record, container, year);
+                            // Setup formatting
+                            ['editBiayaBerangkat', 'editBiayaPenginapan', 'editBiayaPulang', 'editRincianBiayaDinas', 'editRealisasi', 'editTotalAkomodasi', 'editTotalAkomodasiBiayaDinas'].forEach(id => {
+                                setupNumberFormatting(id);
+                            });
+                        };
                         actionsCell.appendChild(editButton);
-                        
-                        // Delete button (temporarily disabled per task requirements)
-                        // const deleteButton = document.createElement('button');
-                        // deleteButton.className = 'delete-btn text-red-500 hover:text-red-700 cursor-pointer';
-                        // deleteButton.innerHTML = '🗑️'; // Trash icon
-                        // deleteButton.title = 'Delete';
-                        // deleteButton.onclick = () => handleDeleteRecord(record.id, container, year);
-                        // actionsCell.appendChild(deleteButton);
+
+                        // Delete button
+                        const deleteButton = document.createElement('button');
+                        deleteButton.className = 'delete-btn text-red-500 hover:text-red-700 transition-colors p-1';
+                        deleteButton.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>`;
+                        deleteButton.title = 'Delete';
+                        deleteButton.onclick = () => handleDeleteRecord(record.id, container, year);
+                        actionsCell.appendChild(deleteButton);
                     }
                 });
 
@@ -1609,7 +1605,11 @@ export async function loadBPDContentByYear(container, year) {
                 row.appendChild(periodeCell);
                 row.appendChild(lamaAuditCell);
                 row.appendChild(totalBiayaCell);
-                row.appendChild(actionsCell); // Add actions cell
+                
+                // Only append actions cell if user is admin
+                if (admin) {
+                    row.appendChild(actionsCell); // Add actions cell
+                }
 
                 tableBody.appendChild(row);
             });
@@ -1620,7 +1620,7 @@ export async function loadBPDContentByYear(container, year) {
 
         // Initial table render
         pagination.render();
-        
+
         // Add event listeners for table export buttons
         document.getElementById('exportExcelTable').addEventListener('click', () => {
             // Filter data to include only required columns (nama_audit to realisasi)
@@ -1643,7 +1643,7 @@ export async function loadBPDContentByYear(container, year) {
             }));
             exportToExcel(filteredData, 'BPD_Records_' + year);
         });
-        
+
         document.getElementById('exportPDFTable').addEventListener('click', () => {
             // Filter data to include only required columns (nama_audit to realisasi)
             const filteredData = bpdData.map(record => ({
@@ -1665,7 +1665,7 @@ export async function loadBPDContentByYear(container, year) {
             }));
             exportToPDF(filteredData, 'BPD Records ' + year);
         });
-        
+
         // Add search functionality
         const searchInputEl = document.getElementById('searchInput');
         if (searchInputEl) {
@@ -1674,24 +1674,30 @@ export async function loadBPDContentByYear(container, year) {
                 pagination.render();
             });
         }
-        
+
         // Add event listeners for budget button (only for admin users)
         if (admin) {
             const setBPDBudgetBtn = document.getElementById('setBPDBudgetBtn');
             if (setBPDBudgetBtn) {
                 setBPDBudgetBtn.addEventListener('click', () => {
                     openBPDBudgetModal('BPD', year);
+                    // Setup formatting
+                    setupNumberFormatting('bpdBudgetAmount');
                 });
             }
-            
+
             // Add event listeners for inline form (only for admin users)
             const addDataBtn = document.getElementById('addDataBtn');
             if (addDataBtn) {
                 addDataBtn.addEventListener('click', () => {
                     document.getElementById('addDataFormContainer').classList.remove('hidden');
+                    // Setup number formatting
+                    ['biayaBerangkat', 'biayaPenginapan', 'biayaPulang', 'rincianBiayaDinas', 'realisasi', 'totalAkomodasi', 'totalAkomodasiBiayaDinas'].forEach(id => {
+                        setupNumberFormatting(id);
+                    });
                 });
             }
-            
+
             const cancelAddDataBtn = document.getElementById('cancelAddDataBtn');
             if (cancelAddDataBtn) {
                 cancelAddDataBtn.addEventListener('click', () => {
@@ -1700,7 +1706,7 @@ export async function loadBPDContentByYear(container, year) {
                     document.getElementById('addDataForm').reset();
                 });
             }
-            
+
             const addDataForm = document.getElementById('addDataForm');
             if (addDataForm) {
                 // Add form submission handler
@@ -1710,33 +1716,33 @@ export async function loadBPDContentByYear(container, year) {
                     // Refresh the data after form submission
                     await loadBPDContentByYear(container, year);
                 });
-                
+
                 // Add auto-calculation for total fields
                 setupFormCalculations();
-                
+
                 // Add form validation
                 setupFormValidation();
             }
         }
     } catch (error) {
         console.error('Error loading BPD content:', error);
-        
+
         // Create error display elements
         const errorContainer = document.createElement('div');
         errorContainer.className = 'bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative';
         errorContainer.setAttribute('role', 'alert');
-        
+
         const errorStrong = document.createElement('strong');
         errorStrong.className = 'font-bold';
         errorStrong.textContent = 'Error! ';
-        
+
         const errorSpan = document.createElement('span');
         errorSpan.className = 'block sm:inline';
         errorSpan.textContent = 'Failed to load BPD data: ' + error.message;
-        
+
         errorContainer.appendChild(errorStrong);
         errorContainer.appendChild(errorSpan);
-        
+
         container.innerHTML = '';
         container.appendChild(errorContainer);
     }
@@ -1750,13 +1756,13 @@ function initBPDChart(chartData) {
         console.error('Canvas element not found');
         return;
     }
-    
+
     const ctx = canvas.getContext('2d');
-    
+
     // Extract data for chart
     const labels = chartData.map(item => item.nama_audit);
     const data = chartData.map(item => item.total_biaya);
-    
+
     // Check if we have valid data
     if (data.length === 0 || data.every(value => value === 0)) {
         console.warn('No valid data for chart');
@@ -1767,12 +1773,12 @@ function initBPDChart(chartData) {
         }
         return;
     }
-    
+
     // Destroy existing chart if it exists
     if (canvas.chart) {
         canvas.chart.destroy();
     }
-    
+
     // Create new chart
     canvas.chart = new Chart(ctx, {
         type: 'pie',
@@ -1816,7 +1822,7 @@ function initBPDChart(chartData) {
                     labels: {
                         padding: 20,
                         usePointStyle: true,
-                        font: function(context) {
+                        font: function (context) {
                             var width = context.chart.width;
                             var size = Math.round(width / 30); // Adjust this ratio as needed
                             // Ensure minimum and maximum font sizes
@@ -1834,7 +1840,7 @@ function initBPDChart(chartData) {
                 },
                 tooltip: {
                     callbacks: {
-                        label: function(context) {
+                        label: function (context) {
                             const label = context.label || '';
                             const value = context.raw || 0;
                             return label + ': ' + formatCurrency(value);
@@ -1852,7 +1858,7 @@ function initBPDChart(chartData) {
                             : '';
                     },
                     color: '#fff',
-                    font: function(context) {
+                    font: function (context) {
                         var width = context.chart.width;
                         var size = Math.round(width / 24); // Adjust this ratio as needed
                         // Ensure minimum and maximum font sizes
@@ -1873,9 +1879,9 @@ function initBPDChart(chartData) {
         },
         plugins: [ChartDataLabels]
     });
-    
+
     // Add resize event listener to update chart
-    window.addEventListener('resize', function() {
+    window.addEventListener('resize', function () {
         if (canvas.chart) {
             canvas.chart.resize();
         }
@@ -1892,26 +1898,26 @@ function setupFormCalculations() {
     const totalAkomodasi = document.getElementById('totalAkomodasi');
     const rincianBiayaDinas = document.getElementById('rincianBiayaDinas');
     const totalAkomodasiBiayaDinas = document.getElementById('totalAkomodasiBiayaDinas');
-    
+
     // Function to calculate totals
     function calculateTotals() {
-        const bb = parseFloat(biayaBerangkat.value) || 0;
-        const bp = parseFloat(biayaPenginapan.value) || 0;
-        const bpg = parseFloat(biayaPulang.value) || 0;
-        const rbd = parseFloat(rincianBiayaDinas.value) || 0;
-        
+        const bb = parseFormattedNumber(biayaBerangkat.value) || 0;
+        const bp = parseFormattedNumber(biayaPenginapan.value) || 0;
+        const bpg = parseFormattedNumber(biayaPulang.value) || 0;
+        const rbd = parseFormattedNumber(rincianBiayaDinas.value) || 0;
+
         const ta = bb + bp + bpg;
         const tabd = ta + rbd;
-        
-        totalAkomodasi.value = ta.toFixed(2);
-        totalAkomodasiBiayaDinas.value = tabd.toFixed(2);
+
+        totalAkomodasi.value = formatNumberWithDots(ta);
+        totalAkomodasiBiayaDinas.value = formatNumberWithDots(tabd);
     }
-    
+
     // Add event listeners to input fields
     [biayaBerangkat, biayaPenginapan, biayaPulang, rincianBiayaDinas].forEach(input => {
         input.addEventListener('input', calculateTotals);
     });
-    
+
     // Initial calculation
     calculateTotals();
 }
@@ -1922,12 +1928,12 @@ function setupFormValidation() {
     const periodeAkhir = document.getElementById('periodeAkhir');
     const periodeError = document.getElementById('periodeError');
     const lamaAudit = document.getElementById('lamaAudit');
-    
+
     // Validate periode dates
     function validatePeriode() {
         const startDate = new Date(periodeAwal.value);
         const endDate = new Date(periodeAkhir.value);
-        
+
         if (periodeAwal.value && periodeAkhir.value) {
             if (endDate < startDate) {
                 periodeError.classList.remove('hidden');
@@ -1939,27 +1945,27 @@ function setupFormValidation() {
         }
         return true;
     }
-    
+
     // Calculate lama audit based on dates
     function calculateLamaAudit() {
         if (periodeAwal.value && periodeAkhir.value) {
             const startDate = new Date(periodeAwal.value);
             const endDate = new Date(periodeAkhir.value);
-            
+
             // Calculate difference in days
             const diffTime = Math.abs(endDate - startDate);
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 to include both start and end dates
-            
+
             lamaAudit.value = diffDays;
         }
     }
-    
+
     // Add event listeners
     periodeAwal.addEventListener('change', () => {
         validatePeriode();
         calculateLamaAudit();
     });
-    
+
     periodeAkhir.addEventListener('change', () => {
         validatePeriode();
         calculateLamaAudit();
@@ -1975,21 +1981,21 @@ function setupEditFormCalculations() {
     const totalAkomodasi = document.getElementById('editTotalAkomodasi');
     const rincianBiayaDinas = document.getElementById('editRincianBiayaDinas');
     const totalAkomodasiBiayaDinas = document.getElementById('editTotalAkomodasiBiayaDinas');
-    
+
     // Function to calculate totals
     function calculateEditTotals() {
-        const bb = parseFloat(biayaBerangkat.value) || 0;
-        const bp = parseFloat(biayaPenginapan.value) || 0;
-        const bpg = parseFloat(biayaPulang.value) || 0;
-        const rbd = parseFloat(rincianBiayaDinas.value) || 0;
-        
+        const bb = parseFormattedNumber(biayaBerangkat.value) || 0;
+        const bp = parseFormattedNumber(biayaPenginapan.value) || 0;
+        const bpg = parseFormattedNumber(biayaPulang.value) || 0;
+        const rbd = parseFormattedNumber(rincianBiayaDinas.value) || 0;
+
         const ta = bb + bp + bpg;
         const tabd = ta + rbd;
-        
-        totalAkomodasi.value = ta.toFixed(2);
-        totalAkomodasiBiayaDinas.value = tabd.toFixed(2);
+
+        totalAkomodasi.value = formatNumberWithDots(ta);
+        totalAkomodasiBiayaDinas.value = formatNumberWithDots(tabd);
     }
-    
+
     // Add event listeners to input fields
     [biayaBerangkat, biayaPenginapan, biayaPulang, rincianBiayaDinas].forEach(input => {
         if (input) {
@@ -2007,18 +2013,18 @@ function calculateEditTotals() {
     const totalAkomodasi = document.getElementById('editTotalAkomodasi');
     const rincianBiayaDinas = document.getElementById('editRincianBiayaDinas');
     const totalAkomodasiBiayaDinas = document.getElementById('editTotalAkomodasiBiayaDinas');
-    
+
     if (biayaBerangkat && biayaPenginapan && biayaPulang && totalAkomodasi && rincianBiayaDinas && totalAkomodasiBiayaDinas) {
-        const bb = parseFloat(biayaBerangkat.value) || 0;
-        const bp = parseFloat(biayaPenginapan.value) || 0;
-        const bpg = parseFloat(biayaPulang.value) || 0;
-        const rbd = parseFloat(rincianBiayaDinas.value) || 0;
-        
+        const bb = parseFormattedNumber(biayaBerangkat.value) || 0;
+        const bp = parseFormattedNumber(biayaPenginapan.value) || 0;
+        const bpg = parseFormattedNumber(biayaPulang.value) || 0;
+        const rbd = parseFormattedNumber(rincianBiayaDinas.value) || 0;
+
         const ta = bb + bp + bpg;
         const tabd = ta + rbd;
-        
-        totalAkomodasi.value = ta.toFixed(2);
-        totalAkomodasiBiayaDinas.value = tabd.toFixed(2);
+
+        totalAkomodasi.value = formatNumberWithDots(ta);
+        totalAkomodasiBiayaDinas.value = formatNumberWithDots(tabd);
     }
 }
 
@@ -2028,13 +2034,13 @@ function setupEditFormValidation() {
     const periodeAkhir = document.getElementById('editPeriodeAkhir');
     const periodeError = document.getElementById('editPeriodeError');
     const lamaAudit = document.getElementById('editLamaAudit');
-    
+
     // Validate periode dates
     function validateEditPeriode() {
         if (periodeAwal && periodeAkhir && periodeError && lamaAudit) {
             const startDate = new Date(periodeAwal.value);
             const endDate = new Date(periodeAkhir.value);
-            
+
             if (periodeAwal.value && periodeAkhir.value) {
                 if (endDate < startDate) {
                     periodeError.classList.remove('hidden');
@@ -2048,30 +2054,30 @@ function setupEditFormValidation() {
         }
         return true;
     }
-    
+
     // Calculate lama audit based on dates
     function calculateEditLamaAudit() {
         if (periodeAwal && periodeAkhir && lamaAudit) {
             if (periodeAwal.value && periodeAkhir.value) {
                 const startDate = new Date(periodeAwal.value);
                 const endDate = new Date(periodeAkhir.value);
-                
+
                 // Calculate difference in days
                 const diffTime = Math.abs(endDate - startDate);
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 to include both start and end dates
-                
+
                 lamaAudit.value = diffDays;
             }
         }
     }
-    
+
     // Add event listeners
     if (periodeAwal && periodeAkhir) {
         periodeAwal.addEventListener('change', () => {
             validateEditPeriode();
             calculateEditLamaAudit();
         });
-        
+
         periodeAkhir.addEventListener('change', () => {
             validateEditPeriode();
             calculateEditLamaAudit();
@@ -2099,6 +2105,14 @@ async function handleEditSubmit(recordId, oldTotal, container, year = null) {
 
         // Get form values
         const noSpdValue = document.getElementById('editNoSpd').value;
+        const biayaBerangkat = parseFormattedNumber(document.getElementById('editBiayaBerangkat').value);
+        const biayaPenginapan = parseFormattedNumber(document.getElementById('editBiayaPenginapan').value);
+        const biayaPulang = parseFormattedNumber(document.getElementById('editBiayaPulang').value);
+        const rincianBiayaDinas = parseFormattedNumber(document.getElementById('editRincianBiayaDinas').value);
+        const realisasi = parseFormattedNumber(document.getElementById('editRealisasi').value);
+        const totalAkomodasi = parseFormattedNumber(document.getElementById('editTotalAkomodasi').value);
+        const totalAkomodasiBiayaDinas = parseFormattedNumber(document.getElementById('editTotalAkomodasiBiayaDinas').value);
+
         const formData = {
             nama_audit: document.getElementById('editNamaAudit').value,
             nama_pemesan: document.getElementById('editNamaPemesan').value,
@@ -2108,26 +2122,26 @@ async function handleEditSubmit(recordId, oldTotal, container, year = null) {
             periode_awal: document.getElementById('editPeriodeAwal').value,
             periode_akhir: document.getElementById('editPeriodeAkhir').value,
             lama_audit: parseInt(document.getElementById('editLamaAudit').value),
-            biaya_berangkat: parseFloat(document.getElementById('editBiayaBerangkat').value),
-            biaya_penginapan: parseFloat(document.getElementById('editBiayaPenginapan').value),
-            biaya_pulang: parseFloat(document.getElementById('editBiayaPulang').value),
-            total_akomodasi: parseFloat(document.getElementById('editTotalAkomodasi').value),
-            rincian_biaya_dinas: parseFloat(document.getElementById('editRincianBiayaDinas').value),
-            total_akomodasi_biaya_dinas: parseFloat(document.getElementById('editTotalAkomodasiBiayaDinas').value),
-            realisasi: parseFloat(document.getElementById('editRealisasi').value)
+            biaya_berangkat: biayaBerangkat,
+            biaya_penginapan: biayaPenginapan,
+            biaya_pulang: biayaPulang,
+            total_akomodasi: totalAkomodasi,
+            rincian_biaya_dinas: rincianBiayaDinas,
+            total_akomodasi_biaya_dinas: totalAkomodasiBiayaDinas,
+            realisasi: realisasi
         };
-        
+
         // Validate that no negative values are submitted
         const negativeFields = Object.keys(formData).filter(key => {
             const value = formData[key];
             return (typeof value === 'number' && value < 0);
         });
-        
+
         if (negativeFields.length > 0) {
             showToast('Nilai tidak boleh negatif', 'error');
             return;
         }
-        
+
         // Check if no_spd already exists for other records
         const { data: existingData, error: checkError } = await supabase
             .from('bpd_master')
@@ -2135,45 +2149,45 @@ async function handleEditSubmit(recordId, oldTotal, container, year = null) {
             .eq('no_spd', noSpdValue)
             .neq('id', recordId) // Exclude current record
             .limit(1);
-        
+
         if (checkError && checkError.code !== 'PGRST116') { // PGRST116 means no rows found
             throw checkError;
         }
-        
+
         if (existingData && existingData.length > 0) {
             showToast('Error: Nomor SPD sudah ada dalam sistem. Silakan gunakan nomor yang berbeda.', 'error');
             return;
         }
-        
+
         // Calculate the delta for budget adjustment
         const newTotal = parseFloat(formData.total_akomodasi_biaya_dinas);
         const delta = newTotal - oldTotal;
-        
+
         // Update the record in Supabase
         const { error } = await supabase
             .from('bpd_master')
             .update(formData)
             .eq('id', recordId);
-        
+
         if (error) throw error;
-        
+
         // Update budget based on the delta if budget exists for the trip year
         if (delta !== 0) {
             const tripYear = new Date(formData.periode_awal).getFullYear();
-            
+
             // Check if there's a budget for this year
             const { data: budgetData, error: budgetError } = await supabase
                 .from('bpd_budget_master')
                 .select('id, budget_awal, budget_sisa')
                 .eq('tahun', tripYear)
                 .single();
-            
+
             if (!budgetError && budgetData) {
                 // Update the budget with the delta
                 // If delta > 0 (increased cost), reduce budget_sisa
                 // If delta < 0 (decreased cost), increase budget_sisa
                 const newRemainingBudget = budgetData.budget_sisa - delta;
-                
+
                 const updateResult = await supabase
                     .from('bpd_budget_master')
                     .update({
@@ -2181,7 +2195,7 @@ async function handleEditSubmit(recordId, oldTotal, container, year = null) {
                         updated_at: new Date().toISOString()
                     })
                     .eq('id', budgetData.id);
-                
+
                 if (updateResult.error) {
                     console.error('Error updating budget:', updateResult.error);
                 } else {
@@ -2197,13 +2211,13 @@ async function handleEditSubmit(recordId, oldTotal, container, year = null) {
                 }
             }
         }
-        
+
         // Show success message
-        showToast('Data BPD berhasil diperbarui!', 'success');
-        
+        showSuccessModal('Data BPD berhasil diperbarui!', 'BPD Diperbarui');
+
         // Close the modal
         closeEditBPDModal();
-        
+
         // Reload data
         if (year) {
             await loadBPDContentByYear(container, year);
@@ -2212,7 +2226,7 @@ async function handleEditSubmit(recordId, oldTotal, container, year = null) {
         }
     } catch (error) {
         console.error('Error updating BPD data:', error);
-        
+
         // Handle specific constraint violation error for duplicate no_spd
         if (error.message && error.message.includes('bpd_master_no_spd_key')) {
             showToast('Error: Nomor SPD sudah ada dalam sistem. Silakan gunakan nomor yang berbeda.', 'error');
@@ -2242,6 +2256,14 @@ async function handleFormSubmit(container, year = null) {
 
         // Get form values
         const noSpdValue = document.getElementById('noSpd').value;
+        const biayaBerangkat = parseFormattedNumber(document.getElementById('biayaBerangkat').value);
+        const biayaPenginapan = parseFormattedNumber(document.getElementById('biayaPenginapan').value);
+        const biayaPulang = parseFormattedNumber(document.getElementById('biayaPulang').value);
+        const rincianBiayaDinas = parseFormattedNumber(document.getElementById('rincianBiayaDinas').value);
+        const realisasi = parseFormattedNumber(document.getElementById('realisasi').value);
+        const totalAkomodasi = parseFormattedNumber(document.getElementById('totalAkomodasi').value);
+        const totalAkomodasiBiayaDinas = parseFormattedNumber(document.getElementById('totalAkomodasiBiayaDinas').value);
+
         const formData = {
             nama_audit: document.getElementById('namaAudit').value,
             nama_pemesan: document.getElementById('namaPemesan').value,
@@ -2251,63 +2273,63 @@ async function handleFormSubmit(container, year = null) {
             periode_awal: document.getElementById('periodeAwal').value,
             periode_akhir: document.getElementById('periodeAkhir').value,
             lama_audit: parseInt(document.getElementById('lamaAudit').value),
-            biaya_berangkat: parseFloat(document.getElementById('biayaBerangkat').value),
-            biaya_penginapan: parseFloat(document.getElementById('biayaPenginapan').value),
-            biaya_pulang: parseFloat(document.getElementById('biayaPulang').value),
-            total_akomodasi: parseFloat(document.getElementById('totalAkomodasi').value),
-            rincian_biaya_dinas: parseFloat(document.getElementById('rincianBiayaDinas').value),
-            total_akomodasi_biaya_dinas: parseFloat(document.getElementById('totalAkomodasiBiayaDinas').value),
-            realisasi: parseFloat(document.getElementById('realisasi').value)
+            biaya_berangkat: biayaBerangkat,
+            biaya_penginapan: biayaPenginapan,
+            biaya_pulang: biayaPulang,
+            total_akomodasi: totalAkomodasi,
+            rincian_biaya_dinas: rincianBiayaDinas,
+            total_akomodasi_biaya_dinas: totalAkomodasiBiayaDinas,
+            realisasi: realisasi
         };
-        
+
         // Validate that no negative values are submitted
         const negativeFields = Object.keys(formData).filter(key => {
             const value = formData[key];
             return (typeof value === 'number' && value < 0);
         });
-        
+
         if (negativeFields.length > 0) {
             showToast('Nilai tidak boleh negatif', 'error');
             return;
         }
-        
+
         // Check if no_spd already exists
         const { data: existingData, error: checkError } = await supabase
             .from('bpd_master')
             .select('no_spd')
             .eq('no_spd', noSpdValue)
             .limit(1);
-        
+
         if (checkError) {
             throw checkError;
         }
-        
+
         if (existingData && existingData.length > 0) {
             showToast('Error: Nomor SPD sudah ada dalam sistem. Silakan gunakan nomor yang berbeda.', 'error');
             return;
         }
-        
+
         // Insert data into Supabase
         const { error } = await supabase
             .from('bpd_master')
             .insert([formData]);
-        
+
         // If successful insertion, update budget if budget exists for the year
         if (!error) {
             const tripYear = new Date(formData.periode_awal).getFullYear();
             const tripCost = parseFloat(formData.total_akomodasi_biaya_dinas);
-            
+
             // Check if there's a budget for this year
             const { data: budgetData, error: budgetError } = await supabase
                 .from('bpd_budget_master')
                 .select('id, budget_awal, budget_sisa')
                 .eq('tahun', tripYear)
                 .single();
-            
+
             if (!budgetError && budgetData) {
                 // Update the budget with the new expense
                 const newRemainingBudget = budgetData.budget_sisa - tripCost;
-                
+
                 const updateResult = await supabase
                     .from('bpd_budget_master')
                     .update({
@@ -2315,7 +2337,7 @@ async function handleFormSubmit(container, year = null) {
                         updated_at: new Date().toISOString()
                     })
                     .eq('id', budgetData.id);
-                
+
                 if (updateResult.error) {
                     console.error('Error updating budget:', updateResult.error);
                 } else {
@@ -2331,18 +2353,18 @@ async function handleFormSubmit(container, year = null) {
                 }
             }
         }
-        
+
         if (error) throw error;
-        
+
         // Show success message
-        showToast('Data BPD berhasil ditambahkan!', 'success');
-        
+        showSuccessModal('Data BPD baru berhasil ditambahkan!', 'BPD Berhasil');
+
         // Hide form
         document.getElementById('addDataFormContainer').classList.add('hidden');
-        
+
         // Reset form
         document.getElementById('addDataForm').reset();
-        
+
         // Reload data
         if (year) {
             await loadBPDContentByYear(container, year);
@@ -2364,7 +2386,9 @@ async function handleFormSubmit(container, year = null) {
 // Function to handle record deletion
 // Handles record deletion with budget restoration and toast notifications
 async function handleDeleteRecord(recordId, container, year = null) {
-    if (!confirm('Apakah Anda yakin ingin menghapus data ini?')) {
+    const confirmed = await showConfirmModal('Apakah Anda yakin ingin menghapus data ini? Data yang dihapus tidak dapat dikembalikan.');
+
+    if (!confirmed) {
         return;
     }
 
@@ -2430,7 +2454,7 @@ async function handleDeleteRecord(recordId, container, year = null) {
         }
 
         // Show success message
-        showToast('Data BPD berhasil dihapus!', 'success');
+        showSuccessModal('Data BPD berhasil dihapus dari sistem!', 'Data Dihapus');
 
         // Reload data
         if (year) {

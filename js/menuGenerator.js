@@ -18,13 +18,13 @@ export async function generateDynamicMenu() {
 
         // Create a map to store unique years and their categories
         const yearCategoryMap = new Map();
-        
+
         // Add all years and their categories to the map
         if (data && data.length > 0) {
             data.forEach(item => {
                 const year = item.tahun;
                 const category = item.kategori;
-                
+
                 if (!yearCategoryMap.has(year)) {
                     yearCategoryMap.set(year, new Set());
                 }
@@ -43,15 +43,17 @@ export async function generateDynamicMenu() {
 
         // Generate menu HTML
         let menuHTML = '';
-        
+
         // Get all unique years from the data and also ensure we include default years like 2025 and 2026
         const dataYears = Array.from(yearCategoryMap.keys()).map(y => parseInt(y));
         const defaultYears = [2025, 2026];
-        
+
         // Combine data years with default years and deduplicate
         const allYearsSet = new Set([...dataYears, ...defaultYears]);
-        const allYears = Array.from(allYearsSet).sort((a, b) => b - a);
-        
+        const allYears = Array.from(allYearsSet)
+            .filter(y => y && !isNaN(y)) // Filter out invalid years
+            .sort((a, b) => b - a);
+
         allYears.forEach(year => {
             // Add collapsible year header
             menuHTML += `
@@ -63,7 +65,7 @@ export async function generateDynamicMenu() {
                 </div>
                 <div class="year-content hidden" id="year-content-${year}">
             `;
-            
+
             // Add BPD menu item for this year (without budget button since BPD uses different table structure)
             menuHTML += `
             <a
@@ -80,12 +82,12 @@ export async function generateDynamicMenu() {
               <span class="sidebar-menu-text">BPD ${year}</span>
             </a>
             `;
-            
+
             // Add menu items for each category (excluding BPD which has different structure)
             defaultCategories.forEach(category => {
                 // Determine module based on category name
                 let module = category.module;
-                
+
                 menuHTML += `
             <a
               href="#"
@@ -103,13 +105,13 @@ export async function generateDynamicMenu() {
 
                 `;
             });
-            
+
             // Close the year content div
             menuHTML += `
                 </div>
             `;
         });
-        
+
         return menuHTML;
     } catch (error) {
         console.error('Unexpected error in generateDynamicMenu:', error);
@@ -120,7 +122,7 @@ export async function generateDynamicMenu() {
 
 // Helper function to get appropriate icon for each category
 function getCategoryIcon(module) {
-    switch(module) {
+    switch (module) {
         case 'audit':
             return '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>';
         case 'konsultan':
@@ -141,7 +143,10 @@ function generateDefaultMenu() {
     // Create a menu with default years 2025 and 2026
     const defaultYears = [2025, 2026];
     let menuHTML = '';
-    
+
+    // Ensure years are valid
+    const sanitizedYears = defaultYears.filter(y => y && !isNaN(y));
+
     const defaultCategories = [
         { module: 'audit', name: 'Beban Biaya Audit' },
         { module: 'konsultan', name: 'Beban Biaya Konsultan' },
@@ -149,7 +154,7 @@ function generateDefaultMenu() {
         { module: 'tamu', name: 'Beban Biaya Tamu' },
         { module: 'rapat', name: 'Beban Biaya Rapat' }
     ];
-    
+
     defaultYears.forEach(year => {
         // Add collapsible year header
         menuHTML += `
@@ -161,7 +166,7 @@ function generateDefaultMenu() {
             </div>
             <div class="year-content hidden" id="year-content-${year}">
         `;
-        
+
         // Add BPD menu item for this year
         menuHTML += `
         <a
@@ -178,12 +183,12 @@ function generateDefaultMenu() {
           <span class="sidebar-menu-text">BPD ${year}</span>
         </a>
         `;
-        
+
         // Add menu items for each category
         defaultCategories.forEach(category => {
             // Determine module based on category name
             let module = category.module;
-            
+
             menuHTML += `
         <a
           href="#"
@@ -201,12 +206,12 @@ function generateDefaultMenu() {
 
             `;
         });
-        
+
         // Close the year content div
         menuHTML += `
             </div>
         `;
     });
-    
+
     return menuHTML;
 }
