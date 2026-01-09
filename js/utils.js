@@ -376,7 +376,7 @@ export async function isAuthenticated(supabase) {
 // Logout function
 export async function logout(supabase) {
     await supabase.auth.signOut();
-    window.location.href = './login.html';
+    window.location.href = './login';
 }
 
 // Mobile menu toggle function
