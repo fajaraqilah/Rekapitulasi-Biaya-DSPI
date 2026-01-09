@@ -7,6 +7,10 @@ export default defineConfig({
     outDir: 'dist',
     sourcemap: false,
     rollupOptions: {
+      input: {
+        main: './index.html',
+        login: './login.html'
+      },
       output: {
         // Static site, no dynamic imports
         inlineDynamicImports: true
@@ -15,5 +19,5 @@ export default defineConfig({
   },
   // Ensure static site generation
   ssr: false,
-  appType: 'spa'  // Single Page Application
+  appType: 'mpa'  // Multi-Page Application
 })
