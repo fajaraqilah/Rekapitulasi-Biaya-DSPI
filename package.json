@@ -5,8 +5,10 @@
   "main": "index.js",
   "scripts": {
     "dev": "vite",  
-    "build": "npx vite build",
+    "build": "npm run prepare && vite build",
     "preview": "vite preview",
+    "prepare": "chmod +x node_modules/.bin/vite || true",
+    "postinstall": "npm run prepare",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "engines": {
@@ -16,11 +18,11 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "vite": "^7.2.2",
     "@tailwindcss/vite": "^4.1.17",
     "tailwindcss": "^4.1.17"
   },
   "dependencies": {
+    "vite": "^7.2.2",
     "@supabase/supabase-js": "^2.83.0",
     "chart.js": "^3.9.1",
     "chartjs-plugin-datalabels": "^2.0.0",
