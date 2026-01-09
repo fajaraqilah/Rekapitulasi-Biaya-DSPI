@@ -2218,12 +2218,6 @@ async function handleEditSubmit(recordId, oldTotal, container, year = null) {
         // Close the modal
         closeEditBPDModal();
 
-        // Reload data
-        if (year) {
-            await loadBPDContentByYear(container, year);
-        } else {
-            await loadBPDContent(container, year);
-        }
     } catch (error) {
         console.error('Error updating BPD data:', error);
 
@@ -2365,12 +2359,6 @@ async function handleFormSubmit(container, year = null) {
         // Reset form
         document.getElementById('addDataForm').reset();
 
-        // Reload data
-        if (year) {
-            await loadBPDContentByYear(container, year);
-        } else {
-            await loadBPDContent(container, year);
-        }
     } catch (error) {
         console.error('Error adding BPD data:', error);
 
@@ -2456,12 +2444,6 @@ async function handleDeleteRecord(recordId, container, year = null) {
         // Show success message
         showSuccessModal('Data BPD berhasil dihapus dari sistem!', 'Data Dihapus');
 
-        // Reload data
-        if (year) {
-            await loadBPDContentByYear(container, year);
-        } else {
-            await loadBPDContent(container, year);
-        }
     } catch (error) {
         console.error('Error deleting BPD data:', error);
         showToast('Error deleting BPD data: ' + error.message, 'error');
