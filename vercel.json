@@ -1,20 +1,11 @@
 {
-  "rewrites": [
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "redirects": [
     {
-      "source": "/login.html",
-      "destination": "/login.html"
-    },
-    {
-      "source": "/",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/(.+\\.html|.+\\..+)$",
-      "destination": "/$1"
-    },
-    {
-      "source": "/((?!.*\\.).*$)",
-      "destination": "/index.html"
+      "source": "/login",
+      "destination": "/login.html",
+      "permanent": false
     }
   ],
   "buildCommand": "npm run build",
