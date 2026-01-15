@@ -10,10 +10,6 @@ export default defineConfig({
       input: {
         main: './index.html',
         login: './login.html'
-      },
-      output: {
-        // Static site, no dynamic imports
-        inlineDynamicImports: true
       }
     }
   },
