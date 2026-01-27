@@ -343,7 +343,7 @@ async function saveBPDBudget() {
             .from('bpd_budget_master')
             .select('id, budget_awal, budget_sisa')
             .eq('tahun', year)
-            .single();
+            .maybeSingle();
 
         if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 means no rows found
             console.error('Error fetching existing budget record:', fetchError);
@@ -586,19 +586,19 @@ export async function loadBPDContent(container, year = null) {
                 <!-- Budget Summary Cards -->
                 <div class="grid grid-cols-4 md:grid-cols-4 gap-4 mb-4">
                     <div class="summary-card">
-                        <h3 class="summary-card-header">Total Budget${year ? ' ' + year : ''}</h3>
+                        <h3 class="summary-card-header">Total RKAP Perjalanan Dinas${year ? ' ' + year : ''}</h3>
                         <p class="summary-card-value positive">${formatCurrency(totalBudget)}</p>
                     </div>
                     <div class="summary-card">
-                        <h3 class="summary-card-header">Total Spent${year ? ' ' + year : ''}</h3>
+                        <h3 class="summary-card-header">Total Biaya Perjalanan Dinas${year ? ' ' + year : ''}</h3>
                         <p class="summary-card-value negative">${formatCurrency(totalSpent)}</p>
                     </div>
                     <div class="summary-card">
-                        <h3 class="summary-card-header">Remaining Budget${year ? ' ' + year : ''}</h3>
+                        <h3 class="summary-card-header">Sisa RKAP Perjalanan Dinas${year ? ' ' + year : ''}</h3>
                         <p class="summary-card-value neutral">${formatCurrency(remainingBudget)}</p>
                     </div>
                     <div class="summary-card">
-                        <h3 class="summary-card-header">Budget Utilization</h3>
+                        <h3 class="summary-card-header">RKAP terhadap Biaya Perjalanan Dinas</h3>
                         <p class="summary-card-value neutral">${totalBudget > 0 ? ((totalSpent / totalBudget) * 100).toFixed(2) + '%' : '0%'}</p>
                     </div>
                 </div>
@@ -1162,7 +1162,7 @@ export async function loadBPDContentByYear(container, year) {
 
         const totalBudgetHeader = document.createElement('h3');
         totalBudgetHeader.className = 'summary-card-header';
-        totalBudgetHeader.textContent = 'Total Budget ' + year;
+        totalBudgetHeader.textContent = 'Total RKAP Perjalanan Dinas ' + year;
 
         const totalBudgetValue = document.createElement('p');
         totalBudgetValue.className = 'summary-card-value positive';
@@ -1177,7 +1177,7 @@ export async function loadBPDContentByYear(container, year) {
 
         const totalSpentHeader = document.createElement('h3');
         totalSpentHeader.className = 'summary-card-header';
-        totalSpentHeader.textContent = 'Total Spent ' + year;
+        totalSpentHeader.textContent = 'Total RKAP Perjalanan Dinas ' + year;
 
         const totalSpentValue = document.createElement('p');
         totalSpentValue.className = 'summary-card-value negative';
@@ -1192,7 +1192,7 @@ export async function loadBPDContentByYear(container, year) {
 
         const remainingBudgetHeader = document.createElement('h3');
         remainingBudgetHeader.className = 'summary-card-header';
-        remainingBudgetHeader.textContent = 'Remaining Budget ' + year;
+        remainingBudgetHeader.textContent = 'Sisa RKAP Perjalanan Dinas ' + year;
 
         const remainingBudgetValue = document.createElement('p');
         remainingBudgetValue.className = 'summary-card-value neutral';
@@ -1207,7 +1207,7 @@ export async function loadBPDContentByYear(container, year) {
 
         const utilizationHeader = document.createElement('h3');
         utilizationHeader.className = 'summary-card-header';
-        utilizationHeader.textContent = 'Budget Utilization';
+        utilizationHeader.textContent = 'RKAP terhadap Biaya Perjalanan Dinas';
 
         const utilizationValue = document.createElement('p');
         utilizationValue.className = 'summary-card-value neutral';
@@ -2142,22 +2142,7 @@ async function handleEditSubmit(recordId, oldTotal, container, year = null) {
             return;
         }
 
-        // Check if no_spd already exists for other records
-        const { data: existingData, error: checkError } = await supabase
-            .from('bpd_master')
-            .select('no_spd')
-            .eq('no_spd', noSpdValue)
-            .neq('id', recordId) // Exclude current record
-            .limit(1);
-
-        if (checkError && checkError.code !== 'PGRST116') { // PGRST116 means no rows found
-            throw checkError;
-        }
-
-        if (existingData && existingData.length > 0) {
-            showToast('Error: Nomor SPD sudah ada dalam sistem. Silakan gunakan nomor yang berbeda.', 'error');
-            return;
-        }
+        // Duplicate NO SPD validation removed - allowing duplicate entries
 
         // Calculate the delta for budget adjustment
         const newTotal = parseFloat(formData.total_akomodasi_biaya_dinas);
@@ -2176,11 +2161,21 @@ async function handleEditSubmit(recordId, oldTotal, container, year = null) {
             const tripYear = new Date(formData.periode_awal).getFullYear();
 
             // Check if there's a budget for this year
-            const { data: budgetData, error: budgetError } = await supabase
-                .from('bpd_budget_master')
-                .select('id, budget_awal, budget_sisa')
-                .eq('tahun', tripYear)
-                .single();
+            let budgetData = null;
+            let budgetError = null;
+            
+            try {
+                const result = await supabase
+                    .from('bpd_budget_master')
+                    .select('id, budget_awal, budget_sisa')
+                    .eq('tahun', tripYear)
+                    .maybeSingle();
+                budgetData = result.data;
+                budgetError = result.error;
+            } catch (queryError) {
+                console.warn('Budget query failed during edit (this is okay if no budget exists):', queryError);
+                budgetError = queryError;
+            }
 
             if (!budgetError && budgetData) {
                 // Update the budget with the delta
@@ -2226,13 +2221,6 @@ async function handleEditSubmit(recordId, oldTotal, container, year = null) {
         }
     } catch (error) {
         console.error('Error updating BPD data:', error);
-
-        // Handle specific constraint violation error for duplicate no_spd
-        if (error.message && error.message.includes('bpd_master_no_spd_key')) {
-            showToast('Error: Nomor SPD sudah ada dalam sistem. Silakan gunakan nomor yang berbeda.', 'error');
-        } else {
-            showToast('Error updating BPD data: ' + error.message, 'error');
-        }
     }
 }
 
@@ -2292,23 +2280,6 @@ async function handleFormSubmit(container, year = null) {
             showToast('Nilai tidak boleh negatif', 'error');
             return;
         }
-
-        // Check if no_spd already exists
-        const { data: existingData, error: checkError } = await supabase
-            .from('bpd_master')
-            .select('no_spd')
-            .eq('no_spd', noSpdValue)
-            .limit(1);
-
-        if (checkError) {
-            throw checkError;
-        }
-
-        if (existingData && existingData.length > 0) {
-            showToast('Error: Nomor SPD sudah ada dalam sistem. Silakan gunakan nomor yang berbeda.', 'error');
-            return;
-        }
-
         // Insert data into Supabase
         const { error } = await supabase
             .from('bpd_master')
@@ -2320,11 +2291,21 @@ async function handleFormSubmit(container, year = null) {
             const tripCost = parseFloat(formData.total_akomodasi_biaya_dinas);
 
             // Check if there's a budget for this year
-            const { data: budgetData, error: budgetError } = await supabase
-                .from('bpd_budget_master')
-                .select('id, budget_awal, budget_sisa')
-                .eq('tahun', tripYear)
-                .single();
+            let budgetData = null;
+            let budgetError = null;
+            
+            try {
+                const result = await supabase
+                    .from('bpd_budget_master')
+                    .select('id, budget_awal, budget_sisa')
+                    .eq('tahun', tripYear)
+                    .maybeSingle();
+                budgetData = result.data;
+                budgetError = result.error;
+            } catch (queryError) {
+                console.warn('Budget query failed (this is okay if no budget exists):', queryError);
+                budgetError = queryError;
+            }
 
             if (!budgetError && budgetData) {
                 // Update the budget with the new expense
@@ -2374,12 +2355,8 @@ async function handleFormSubmit(container, year = null) {
     } catch (error) {
         console.error('Error adding BPD data:', error);
 
-        // Handle specific constraint violation error for duplicate no_spd
-        if (error.message && error.message.includes('bpd_master_no_spd_key')) {
-            showToast('Error: Nomor SPD sudah ada dalam sistem. Silakan gunakan nomor yang berbeda.', 'error');
-        } else {
-            showToast('Error adding BPD data: ' + error.message, 'error');
-        }
+        // Error handling for other issues
+        showToast('Error adding BPD data: ' + error.message, 'error');
     }
 }
 
@@ -2420,11 +2397,21 @@ async function handleDeleteRecord(recordId, container, year = null) {
         if (deleteError) throw deleteError;
 
         // Restore the budget if budget exists for the year
-        const { data: budgetData, error: budgetError } = await supabase
-            .from('bpd_budget_master')
-            .select('id, budget_awal, budget_sisa')
-            .eq('tahun', tripYear)
-            .single();
+        let budgetData = null;
+        let budgetError = null;
+        
+        try {
+            const result = await supabase
+                .from('bpd_budget_master')
+                .select('id, budget_awal, budget_sisa')
+                .eq('tahun', tripYear)
+                .maybeSingle();
+            budgetData = result.data;
+            budgetError = result.error;
+        } catch (queryError) {
+            console.warn('Budget query failed during deletion (this is okay if no budget exists):', queryError);
+            budgetError = queryError;
+        }
 
         if (!budgetError && budgetData) {
             // Update the budget by adding back the deleted cost
