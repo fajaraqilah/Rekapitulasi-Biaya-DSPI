@@ -1177,7 +1177,7 @@ export async function loadBPDContentByYear(container, year) {
 
         const totalSpentHeader = document.createElement('h3');
         totalSpentHeader.className = 'summary-card-header';
-        totalSpentHeader.textContent = 'Total RKAP Perjalanan Dinas ' + year;
+        totalSpentHeader.textContent = 'Total Biaya Perjalanan Dinas ' + year;
 
         const totalSpentValue = document.createElement('p');
         totalSpentValue.className = 'summary-card-value negative';
