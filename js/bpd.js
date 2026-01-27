@@ -208,12 +208,12 @@ export function openBPDEditModal(record, container, year = null) {
     const fields = [
         { label: 'Nama Audit', id: 'editNamaAudit', type: 'text', value: record.nama_audit, required: true },
         { label: 'Nama Pemesan', id: 'editNamaPemesan', type: 'text', value: record.nama_pemesan, required: true },
-        { label: 'Jenis Audit', id: 'editJenisAudit', type: 'text', value: record.jenis_audit, required: true },
+        { label: 'Jenis Kegiatan', id: 'editJenisAudit', type: 'text', value: record.jenis_audit, required: true },
         { label: 'Nomor SPD', id: 'editNoSpd', type: 'text', value: record.no_spd, required: true },
         { label: 'Nomor BPD', id: 'editNoBpd', type: 'text', value: record.no_bpd, required: true },
         { label: 'Periode Awal', id: 'editPeriodeAwal', type: 'date', value: record.periode_awal, required: true },
         { label: 'Periode Akhir', id: 'editPeriodeAkhir', type: 'date', value: record.periode_akhir, required: true },
-        { label: 'Lama Audit (hari)', id: 'editLamaAudit', type: 'number', value: record.lama_audit, min: '1', required: true },
+        { label: 'Lama Kegiatan (hari)', id: 'editLamaAudit', type: 'number', value: record.lama_audit, min: '1', required: true },
         { label: 'Biaya Berangkat', id: 'editBiayaBerangkat', type: 'text', value: formatNumberWithDots(record.biaya_berangkat), required: true },
         { label: 'Biaya Penginapan', id: 'editBiayaPenginapan', type: 'text', value: formatNumberWithDots(record.biaya_penginapan), required: true },
         { label: 'Biaya Pulang', id: 'editBiayaPulang', type: 'text', value: formatNumberWithDots(record.biaya_pulang), required: true },
@@ -678,7 +678,7 @@ export async function loadBPDContent(container, year = null) {
                                     <input type="text" id="namaPemesan" class="form-control" required>
                                 </div>
                                 <div>
-                                    <label class="form-label">Jenis Audit</label>
+                                    <label class="form-label">Jenis Kegiatan</label>
                                     <input type="text" id="jenisAudit" class="form-control" required>
                                 </div>
                                 <div>
@@ -698,7 +698,7 @@ export async function loadBPDContent(container, year = null) {
                                     <input type="date" id="periodeAkhir" class="form-control" required>
                                 </div>
                                 <div>
-                                    <label class="form-label">Lama Audit (hari)</label>
+                                    <label class="form-label">Lama Kegiatan (hari)</label>
                                     <input type="number" id="lamaAudit" class="form-control" min="1" required>
                                     <div id="periodeError" class="text-red-500 text-sm mt-1 hidden">Periode akhir harus setelah atau sama dengan periode awal</div>
                                 </div>
@@ -744,11 +744,11 @@ export async function loadBPDContent(container, year = null) {
                                 <tr>
                                     <th>Nama Audit</th>
                                     <th>Nama Pemesan</th>
-                                    <th>Jenis Audit</th>
+                                    <th>Jenis Kegiatan</th>
                                     <th>No SPD</th>
                                     <th>No BPD</th>
                                     <th>Periode</th>
-                                    <th>Lama Audit</th>
+                                    <th>Lama Kegiatan (hari)</th>
                                     <th>Total Biaya</th>
                                     ${admin ? '<th>Actions</th>' : ''}
                                 </tr>
@@ -879,12 +879,12 @@ export async function loadBPDContent(container, year = null) {
             const filteredData = bpdData.map(record => ({
                 'Nama Audit': record.nama_audit,
                 'Nama Pemesan': record.nama_pemesan,
-                'Jenis Audit': record.jenis_audit,
+                'Jenis Kegiatan': record.jenis_audit,
                 'No SPD': record.no_spd,
                 'No BPD': record.no_bpd,
                 'Periode Awal': record.periode_awal,
                 'Periode Akhir': record.periode_akhir,
-                'Lama Audit': record.lama_audit,
+                'Lama Kegiatan (hari)': record.lama_audit,
                 'Biaya Berangkat': record.biaya_berangkat,
                 'Biaya Penginapan': record.biaya_penginapan,
                 'Biaya Pulang': record.biaya_pulang,
@@ -901,12 +901,12 @@ export async function loadBPDContent(container, year = null) {
             const filteredData = bpdData.map(record => ({
                 'Nama Audit': record.nama_audit,
                 'Nama Pemesan': record.nama_pemesan,
-                'Jenis Audit': record.jenis_audit,
+                'Jenis Kegiatan': record.jenis_audit,
                 'No SPD': record.no_spd,
                 'No BPD': record.no_bpd,
                 'Periode Awal': record.periode_awal,
                 'Periode Akhir': record.periode_akhir,
-                'Lama Audit': record.lama_audit,
+                'Lama Kegiatan (hari)': record.lama_audit,
                 'Biaya Berangkat': record.biaya_berangkat,
                 'Biaya Penginapan': record.biaya_penginapan,
                 'Biaya Pulang': record.biaya_pulang,
@@ -1397,12 +1397,12 @@ export async function loadBPDContentByYear(container, year) {
             const fields = [
                 { label: 'Nama Audit', id: 'namaAudit', type: 'text', required: true },
                 { label: 'Nama Pemesan', id: 'namaPemesan', type: 'text', required: true },
-                { label: 'Jenis Audit', id: 'jenisAudit', type: 'text', required: true },
+                { label: 'Jenis Kegiatan', id: 'jenisAudit', type: 'text', required: true },
                 { label: 'Nomor SPD', id: 'noSpd', type: 'text', required: true },
                 { label: 'Nomor BPD', id: 'noBpd', type: 'text', required: true },
                 { label: 'Periode Awal', id: 'periodeAwal', type: 'date', required: true },
                 { label: 'Periode Akhir', id: 'periodeAkhir', type: 'date', required: true },
-                { label: 'Lama Audit (hari)', id: 'lamaAudit', type: 'number', min: '1', required: true },
+                { label: 'Lama Kegiatan (hari)', id: 'lamaAudit', type: 'number', min: '1', required: true },
                 { label: 'Biaya Berangkat', id: 'biayaBerangkat', type: 'text', placeholder: '0', required: true },
                 { label: 'Biaya Penginapan', id: 'biayaPenginapan', type: 'text', placeholder: '0', required: true },
                 { label: 'Biaya Pulang', id: 'biayaPulang', type: 'text', placeholder: '0', required: true },
@@ -1478,7 +1478,7 @@ export async function loadBPDContentByYear(container, year) {
         const thead = document.createElement('thead');
         const headerRow = document.createElement('tr');
 
-        const headers = admin ? ['Nama Audit', 'Nama Pemesan', 'Jenis Audit', 'No SPD', 'No BPD', 'Periode', 'Lama Audit', 'Total Biaya', 'Actions'] : ['Nama Audit', 'Nama Pemesan', 'Jenis Audit', 'No SPD', 'No BPD', 'Periode', 'Lama Audit', 'Total Biaya'];
+        const headers = admin ? ['Nama Audit', 'Nama Pemesan', 'Jenis Kegiatan', 'No SPD', 'No BPD', 'Periode', 'Lama Kegiatan (hari)', 'Total Biaya', 'Actions'] : ['Nama Audit', 'Nama Pemesan', 'Jenis Kegiatan', 'No SPD', 'No BPD', 'Periode', 'Lama Kegiatan (hari)', 'Total Biaya'];
 
         headers.forEach(headerText => {
             const th = document.createElement('th');
@@ -1627,12 +1627,12 @@ export async function loadBPDContentByYear(container, year) {
             const filteredData = bpdData.map(record => ({
                 'Nama Audit': record.nama_audit,
                 'Nama Pemesan': record.nama_pemesan,
-                'Jenis Audit': record.jenis_audit,
+                'Jenis Kegiatan': record.jenis_audit,
                 'No SPD': record.no_spd,
                 'No BPD': record.no_bpd,
                 'Periode Awal': record.periode_awal,
                 'Periode Akhir': record.periode_akhir,
-                'Lama Audit': record.lama_audit,
+                'Lama Kegiatan (hari)': record.lama_audit,
                 'Biaya Berangkat': record.biaya_berangkat,
                 'Biaya Penginapan': record.biaya_penginapan,
                 'Biaya Pulang': record.biaya_pulang,
@@ -1649,12 +1649,12 @@ export async function loadBPDContentByYear(container, year) {
             const filteredData = bpdData.map(record => ({
                 'Nama Audit': record.nama_audit,
                 'Nama Pemesan': record.nama_pemesan,
-                'Jenis Audit': record.jenis_audit,
+                'Jenis Kegiatan': record.jenis_audit,
                 'No SPD': record.no_spd,
                 'No BPD': record.no_bpd,
                 'Periode Awal': record.periode_awal,
                 'Periode Akhir': record.periode_akhir,
-                'Lama Audit': record.lama_audit,
+                'Lama Kegiatan (hari)': record.lama_audit,
                 'Biaya Berangkat': record.biaya_berangkat,
                 'Biaya Penginapan': record.biaya_penginapan,
                 'Biaya Pulang': record.biaya_pulang,
