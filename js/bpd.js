@@ -218,8 +218,8 @@ export function openBPDEditModal(record, container, year = null) {
         { label: 'Biaya Penginapan', id: 'editBiayaPenginapan', type: 'text', value: formatNumberWithDots(record.biaya_penginapan), required: true },
         { label: 'Biaya Pulang', id: 'editBiayaPulang', type: 'text', value: formatNumberWithDots(record.biaya_pulang), required: true },
         { label: 'Total Akomodasi', id: 'editTotalAkomodasi', type: 'text', value: formatNumberWithDots(record.total_akomodasi), readonly: true },
-        { label: 'Rincian Biaya Dinas', id: 'editRincianBiayaDinas', type: 'text', value: formatNumberWithDots(record.rincian_biaya_dinas), required: true },
-        { label: 'Total Akomodasi + Biaya Dinas', id: 'editTotalAkomodasiBiayaDinas', type: 'text', value: formatNumberWithDots(record.total_akomodasi_biaya_dinas), readonly: true },
+        { label: '<strong>Rincian Biaya Dinas</strong>', id: 'editRincianBiayaDinas', type: 'text', value: formatNumberWithDots(record.rincian_biaya_dinas), required: true },
+        { label: '<strong>Total Akomodasi + Realisasi Biaya Dinas</strong>', id: 'editTotalAkomodasiBiayaDinas', type: 'text', value: formatNumberWithDots(record.total_akomodasi_biaya_dinas), readonly: true },
         { label: 'Realisasi', id: 'editRealisasi', type: 'text', value: formatNumberWithDots(record.realisasi), required: true }
     ];
 
@@ -228,7 +228,7 @@ export function openBPDEditModal(record, container, year = null) {
 
         const fieldLabel = document.createElement('label');
         fieldLabel.className = 'form-label';
-        fieldLabel.textContent = field.label;
+        fieldLabel.innerHTML = field.label;
 
         const fieldInput = document.createElement('input');
         fieldInput.type = field.type;
@@ -719,11 +719,11 @@ export async function loadBPDContent(container, year = null) {
                                     <input type="text" id="totalAkomodasi" class="form-control" placeholder="0" readonly>
                                 </div>
                                 <div>
-                                    <label class="form-label">Rincian Biaya Dinas</label>
+                                    <label class="form-label"><strong>Rincian Biaya Dinas</strong></label>
                                     <input type="text" id="rincianBiayaDinas" class="form-control" placeholder="0" required>
                                 </div>
                                 <div>
-                                    <label class="form-label">Total Akomodasi + Biaya Dinas</label>
+                                    <label class="form-label"><strong>Total Akomodasi + Realisasi Biaya Dinas</strong></label>
                                     <input type="text" id="totalAkomodasiBiayaDinas" class="form-control" placeholder="0" readonly>
                                 </div>
                                 <div>
@@ -857,7 +857,7 @@ export async function loadBPDContent(container, year = null) {
                 row.appendChild(periodeCell);
                 row.appendChild(lamaAuditCell);
                 row.appendChild(totalBiayaCell);
-                
+
                 // Only append actions cell if user is admin
                 if (admin) {
                     row.appendChild(actionsCell); // Add actions cell
@@ -1407,8 +1407,8 @@ export async function loadBPDContentByYear(container, year) {
                 { label: 'Biaya Penginapan', id: 'biayaPenginapan', type: 'text', placeholder: '0', required: true },
                 { label: 'Biaya Pulang', id: 'biayaPulang', type: 'text', placeholder: '0', required: true },
                 { label: 'Total Akomodasi', id: 'totalAkomodasi', type: 'text', placeholder: '0', readonly: true },
-                { label: 'Rincian Biaya Dinas', id: 'rincianBiayaDinas', type: 'text', placeholder: '0', required: true },
-                { label: 'Total Akomodasi + Biaya Dinas', id: 'totalAkomodasiBiayaDinas', type: 'text', placeholder: '0', readonly: true },
+                { label: '<strong>Rincian Biaya Dinas</strong>', id: 'rincianBiayaDinas', type: 'text', placeholder: '0', required: true },
+                { label: '<strong>Total Akomodasi + Realisasi Biaya Dinas</strong>', id: 'totalAkomodasiBiayaDinas', type: 'text', placeholder: '0', readonly: true },
                 { label: 'Realisasi', id: 'realisasi', type: 'text', placeholder: '0', required: true }
             ];
 
@@ -1417,7 +1417,7 @@ export async function loadBPDContentByYear(container, year) {
 
                 const fieldLabel = document.createElement('label');
                 fieldLabel.className = 'form-label';
-                fieldLabel.textContent = field.label;
+                fieldLabel.innerHTML = field.label;
 
                 const fieldInput = document.createElement('input');
                 fieldInput.type = field.type;
@@ -1605,7 +1605,7 @@ export async function loadBPDContentByYear(container, year) {
                 row.appendChild(periodeCell);
                 row.appendChild(lamaAuditCell);
                 row.appendChild(totalBiayaCell);
-                
+
                 // Only append actions cell if user is admin
                 if (admin) {
                     row.appendChild(actionsCell); // Add actions cell
@@ -1904,18 +1904,19 @@ function setupFormCalculations() {
         const bb = parseFormattedNumber(biayaBerangkat.value) || 0;
         const bp = parseFormattedNumber(biayaPenginapan.value) || 0;
         const bpg = parseFormattedNumber(biayaPulang.value) || 0;
-        const rbd = parseFormattedNumber(rincianBiayaDinas.value) || 0;
+        const realisasi = parseFormattedNumber(document.getElementById('realisasi')?.value) || 0;
 
         const ta = bb + bp + bpg;
-        const tabd = ta + rbd;
+        const tabd = ta + realisasi;
 
         totalAkomodasi.value = formatNumberWithDots(ta);
         totalAkomodasiBiayaDinas.value = formatNumberWithDots(tabd);
     }
 
     // Add event listeners to input fields
-    [biayaBerangkat, biayaPenginapan, biayaPulang, rincianBiayaDinas].forEach(input => {
-        input.addEventListener('input', calculateTotals);
+    const realisasiInput = document.getElementById('realisasi');
+    [biayaBerangkat, biayaPenginapan, biayaPulang, realisasiInput].forEach(input => {
+        if (input) input.addEventListener('input', calculateTotals);
     });
 
     // Initial calculation
@@ -1987,17 +1988,18 @@ function setupEditFormCalculations() {
         const bb = parseFormattedNumber(biayaBerangkat.value) || 0;
         const bp = parseFormattedNumber(biayaPenginapan.value) || 0;
         const bpg = parseFormattedNumber(biayaPulang.value) || 0;
-        const rbd = parseFormattedNumber(rincianBiayaDinas.value) || 0;
+        const realisasi = parseFormattedNumber(document.getElementById('editRealisasi')?.value) || 0;
 
         const ta = bb + bp + bpg;
-        const tabd = ta + rbd;
+        const tabd = ta + realisasi;
 
         totalAkomodasi.value = formatNumberWithDots(ta);
         totalAkomodasiBiayaDinas.value = formatNumberWithDots(tabd);
     }
 
     // Add event listeners to input fields
-    [biayaBerangkat, biayaPenginapan, biayaPulang, rincianBiayaDinas].forEach(input => {
+    const realisasiInput = document.getElementById('editRealisasi');
+    [biayaBerangkat, biayaPenginapan, biayaPulang, realisasiInput].forEach(input => {
         if (input) {
             input.addEventListener('input', calculateEditTotals);
         }
@@ -2014,14 +2016,15 @@ function calculateEditTotals() {
     const rincianBiayaDinas = document.getElementById('editRincianBiayaDinas');
     const totalAkomodasiBiayaDinas = document.getElementById('editTotalAkomodasiBiayaDinas');
 
-    if (biayaBerangkat && biayaPenginapan && biayaPulang && totalAkomodasi && rincianBiayaDinas && totalAkomodasiBiayaDinas) {
+    const editRealisasi = document.getElementById('editRealisasi');
+    if (biayaBerangkat && biayaPenginapan && biayaPulang && totalAkomodasi && editRealisasi && totalAkomodasiBiayaDinas) {
         const bb = parseFormattedNumber(biayaBerangkat.value) || 0;
         const bp = parseFormattedNumber(biayaPenginapan.value) || 0;
         const bpg = parseFormattedNumber(biayaPulang.value) || 0;
-        const rbd = parseFormattedNumber(rincianBiayaDinas.value) || 0;
+        const realisasi = parseFormattedNumber(editRealisasi.value) || 0;
 
         const ta = bb + bp + bpg;
-        const tabd = ta + rbd;
+        const tabd = ta + realisasi;
 
         totalAkomodasi.value = formatNumberWithDots(ta);
         totalAkomodasiBiayaDinas.value = formatNumberWithDots(tabd);
@@ -2163,7 +2166,7 @@ async function handleEditSubmit(recordId, oldTotal, container, year = null) {
             // Check if there's a budget for this year
             let budgetData = null;
             let budgetError = null;
-            
+
             try {
                 const result = await supabase
                     .from('bpd_budget_master')
@@ -2293,7 +2296,7 @@ async function handleFormSubmit(container, year = null) {
             // Check if there's a budget for this year
             let budgetData = null;
             let budgetError = null;
-            
+
             try {
                 const result = await supabase
                     .from('bpd_budget_master')
@@ -2399,7 +2402,7 @@ async function handleDeleteRecord(recordId, container, year = null) {
         // Restore the budget if budget exists for the year
         let budgetData = null;
         let budgetError = null;
-        
+
         try {
             const result = await supabase
                 .from('bpd_budget_master')
