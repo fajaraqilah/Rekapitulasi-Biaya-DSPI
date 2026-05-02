@@ -1806,6 +1806,38 @@ html {
     background-color: #2563eb;
 }
 
+.import-button {
+    padding: 0.5rem 1rem;
+    background-color: #2563eb;
+    color: white;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.2s;
+}
+
+.import-button:hover {
+    background-color: #1d4ed8;
+}
+
+.template-button {
+    padding: 0.5rem 1rem;
+    background-color: #4b5563;
+    color: white;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.2s;
+}
+
+.template-button:hover {
+    background-color: #374151;
+}
+
 .transactions-table {
     width: 100%;
     border-collapse: collapse;

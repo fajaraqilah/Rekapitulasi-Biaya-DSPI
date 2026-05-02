@@ -1,5 +1,5 @@
 import { supabase } from './supabaseClient.js';
-import { formatCurrency, exportToExcel, exportToPDF, formatNumberWithDots, setupNumberFormatting, parseFormattedNumber, showSuccessModal, showConfirmModal } from './utils.js';
+import { formatCurrency, exportToExcel, exportToPDF, formatNumberWithDots, setupNumberFormatting, parseFormattedNumber, showSuccessModal, showConfirmModal, readExcelFile, downloadExcelTemplate } from './utils.js';
 import { applyPagination, isAdmin } from './utils.js';
 import Chart from 'chart.js/auto';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
@@ -38,9 +38,10 @@ export async function loadBebanBiayaContent(container, module, year = null) {
         // Render initial UI with subcategory dropdown
         renderInitialContent(container, module, categoryName, admin);
 
-        // Populate subcategory dropdown
+        // Populate subcategory dropdown and load summary data
         setTimeout(async () => {
-            await populateSubcategoryDropdown(categoryName, year);
+            await populateSubcategoryDropdown(categoryName, currentYear);
+            await loadCategorySummaryData(module, categoryName, currentYear);
         }, 100);
 
     } catch (error) {
@@ -135,6 +136,9 @@ function renderInitialContent(container, module, categoryName, admin) {
             <div class="mb-4 space-y-2">
                 <button id="toggleFormBtn" class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 hidden">Add New Transaction</button>
                 <button id="setBudgetBtn" class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 hidden">Set Budget</button>
+                <button id="importExcelBtn" class="import-button hidden">Import Excel</button>
+                <button id="downloadTemplateBtn" class="template-button hidden">Template Excel</button>
+                <input type="file" id="importFileInput" class="hidden" accept=".xlsx, .xls">
             </div>
             ` : ''}
             
@@ -207,15 +211,16 @@ function setupInitialEventListeners(module, categoryName, admin) {
                     if (setBudgetBtn) {
                         setBudgetBtn.classList.remove('hidden');
                     }
+                    const importBtn = document.getElementById('importExcelBtn');
+                    const templateBtn = document.getElementById('downloadTemplateBtn');
+                    if (importBtn) importBtn.classList.remove('hidden');
+                    if (templateBtn) templateBtn.classList.remove('hidden');
                 }
 
                 await loadSubcategoryData(module, categoryName, this.value, currentYear);
             } else {
-                // Clear data when no subcategory is selected
-                document.getElementById('summaryCardsContainer').innerHTML = '';
-                document.getElementById('transactionsTableContainer').innerHTML = '';
-                document.getElementById('exportExcel').classList.add('hidden');
-                document.getElementById('exportPDF').classList.add('hidden');
+                // Load category summary data when no subcategory is selected
+                await loadCategorySummaryData(module, categoryName, currentYear);
 
                 // Hide the "Add Transaction" and "Set Budget" buttons when no subcategory is selected (only for admin)
                 if (admin) {
@@ -227,6 +232,10 @@ function setupInitialEventListeners(module, categoryName, admin) {
                     if (setBudgetBtn) {
                         setBudgetBtn.classList.add('hidden');
                     }
+                    const importBtn = document.getElementById('importExcelBtn');
+                    const templateBtn = document.getElementById('downloadTemplateBtn');
+                    if (importBtn) importBtn.classList.add('hidden');
+                    if (templateBtn) templateBtn.classList.add('hidden');
                 }
             }
         });
@@ -285,6 +294,29 @@ function setupInitialEventListeners(module, categoryName, admin) {
                 } else {
                     alert('Please select a subcategory first');
                 }
+            });
+        }
+
+        // Import Excel buttons
+        const importBtn = document.getElementById('importExcelBtn');
+        const fileInput = document.getElementById('importFileInput');
+        if (importBtn && fileInput) {
+            importBtn.addEventListener('click', () => fileInput.click());
+            fileInput.addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const selectedSubKategori = document.getElementById('subKategoriSelect').value;
+                    await handleImportExcel(file, module, categoryName, selectedSubKategori);
+                    fileInput.value = ''; // Reset
+                }
+            });
+        }
+
+        const templateBtn = document.getElementById('downloadTemplateBtn');
+        if (templateBtn) {
+            templateBtn.addEventListener('click', () => {
+                const subKategori = document.getElementById('subKategoriSelect').value;
+                handleDownloadTemplate(categoryName, subKategori);
             });
         }
     }
@@ -400,6 +432,163 @@ async function loadSubcategoryData(module, categoryName, subKategori, year) {
         `;
     }
 }
+// Function to load summary data for all subcategories in a category
+async function loadCategorySummaryData(module, categoryName, year) {
+    try {
+        if (!year || year === 'null' || isNaN(parseInt(year))) {
+            throw new Error(`Invalid year passed to loadCategorySummaryData: ${year}`);
+        }
+
+        const parsedYear = parseInt(year);
+
+        // Fetch all master data for the category
+        const { data: masterDataList, error: masterError } = await supabase
+            .from('beban_biaya_master')
+            .select('id, tahun, kategori, subkategori, jumlah_awal, jumlah_akhir')
+            .eq('tahun', parsedYear)
+            .eq('kategori', categoryName);
+
+        if (masterError) {
+            throw masterError;
+        }
+
+        if (!masterDataList || masterDataList.length === 0) {
+            // No subcategories found for this category and year
+            const emptySummaryData = {
+                jumlah_awal: 0,
+                total_pemakaian: 0,
+                jumlah_akhir: 0,
+                jumlah_transaksi: 0,
+                kategori: categoryName,
+                tahun: parsedYear
+            };
+            updateUIWithCategorySummaryData(emptySummaryData, [], categoryName);
+            return;
+        }
+
+        const masterIds = masterDataList.map(m => m.id);
+
+        // Fetch all transactions for these master records
+        const { data: transactionData, error: transactionError } = await supabase
+            .from('beban_biaya_transaksi')
+            .select('*')
+            .in('master_id', masterIds)
+            .order('tanggal_kegiatan', { ascending: false });
+
+        if (transactionError) {
+            throw transactionError;
+        }
+
+        // Aggregate data per subcategory
+        const subcategorySummaries = masterDataList.map(master => {
+            const trans = transactionData.filter(t => t.master_id === master.id);
+            const totalPemakaian = trans.reduce((sum, t) => sum + Number(t.biaya_kegiatan || 0), 0);
+            return {
+                subkategori: master.subkategori,
+                jumlah_awal: Number(master.jumlah_awal || 0),
+                total_pemakaian: totalPemakaian,
+                jumlah_akhir: master.jumlah_akhir !== null ? Number(master.jumlah_akhir) : (Number(master.jumlah_awal || 0) - totalPemakaian),
+                jumlah_transaksi: trans.length
+            };
+        });
+
+        // Calculate total summary
+        const totalAwal = subcategorySummaries.reduce((sum, s) => sum + s.jumlah_awal, 0);
+        const totalPemakaian = subcategorySummaries.reduce((sum, s) => sum + s.total_pemakaian, 0);
+        const totalAkhir = subcategorySummaries.reduce((sum, s) => sum + s.jumlah_akhir, 0);
+        const totalTransaksi = subcategorySummaries.reduce((sum, s) => sum + s.jumlah_transaksi, 0);
+
+        const summaryData = {
+            jumlah_awal: totalAwal,
+            total_pemakaian: totalPemakaian,
+            jumlah_akhir: totalAkhir,
+            jumlah_transaksi: totalTransaksi,
+            kategori: categoryName,
+            tahun: parsedYear
+        };
+
+        // Update UI
+        updateUIWithCategorySummaryData(summaryData, subcategorySummaries, categoryName);
+
+    } catch (error) {
+        console.error('Error loading category summary data:', error);
+        const summaryCardsContainer = document.getElementById('summaryCardsContainer');
+        if (summaryCardsContainer) {
+            summaryCardsContainer.innerHTML = `
+                <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative mt-4" role="alert">
+                    <strong class="font-bold">Error!</strong>
+                    <span class="block sm:inline">${error.message}</span>
+                </div>
+            `;
+        }
+    }
+}
+
+// Function to update UI with category summary data
+function updateUIWithCategorySummaryData(summaryData, subcategorySummaries, categoryName) {
+    const summaryCardsContainer = document.getElementById('summaryCardsContainer');
+    if (summaryData && summaryCardsContainer) {
+        summaryCardsContainer.innerHTML = `
+           <div class="grid grid-cols-4 md:grid-cols-4 gap-4 mb-4">
+                <div class="summary-card">
+                    <h3 class="summary-card-header">Total Anggaran</h3>
+                    <p class="summary-card-value positive">${formatCurrency(summaryData.jumlah_awal)}</p>
+                </div>
+                <div class="summary-card">
+                    <h3 class="summary-card-header">Total Pemakaian</h3>
+                    <p class="summary-card-value negative">${formatCurrency(summaryData.total_pemakaian)}</p>
+                </div>
+                <div class="summary-card">
+                    <h3 class="summary-card-header">Total Jumlah Akhir</h3>
+                    <p class="summary-card-value neutral">${formatCurrency(summaryData.jumlah_akhir)}</p>
+                </div>
+                <div class="summary-card">
+                    <h3 class="summary-card-header">Total Transaksi</h3>
+                    <p class="summary-card-value neutral">${summaryData.jumlah_transaksi || 0}</p>
+                </div>
+            </div>
+        `;
+    }
+
+    const transactionsTableContainer = document.getElementById('transactionsTableContainer');
+    if (subcategorySummaries && transactionsTableContainer) {
+        transactionsTableContainer.innerHTML = `
+            <div class="transactions-table-container" id="bebanBiayaSummaryTableContainer">
+                <div class="flex flex-wrap items-center justify-between mb-4 gap-4">
+                    <h3 class="transactions-table-title">Rincian Data - ${categoryName}</h3>
+                </div>
+                <div class="table-container">
+                    <table class="transactions-table">
+                        <thead>
+                            <tr>
+                                <th>Subkategori</th>
+                                <th>Anggaran</th>
+                                <th>Total Pemakaian</th>
+                                <th>Jumlah Akhir</th>
+                                <th>Jumlah Transaksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bebanBiayaSummaryTableBody">
+                            ${subcategorySummaries.length === 0 ? 
+                                '<tr><td colspan="5" class="text-center py-4">No data available</td></tr>' : 
+                                subcategorySummaries.map(sub => `
+                                    <tr>
+                                        <td class="font-medium">${sub.subkategori || '-'}</td>
+                                        <td>${formatCurrency(sub.jumlah_awal)}</td>
+                                        <td>${formatCurrency(sub.total_pemakaian)}</td>
+                                        <td>${formatCurrency(sub.jumlah_akhir)}</td>
+                                        <td>${sub.jumlah_transaksi}</td>
+                                    </tr>
+                                `).join('')
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+    }
+}
+
 // Function to update UI with subcategory data
 function updateUIWithSubcategoryData(summaryData, transactionData, subKategori) {
     // Update summary cards
@@ -1040,4 +1229,85 @@ async function handleDeleteTransaction(transactionId, module, categoryName, subK
         console.error('Error deleting transaction:', error);
         alert('Error deleting transaction: ' + error.message);
     }
+}
+
+// Function to handle Excel import for Beban Biaya
+async function handleImportExcel(file, module, categoryName, subKategori) {
+    try {
+        if (!subKategori) {
+            alert("Please select a subcategory first!");
+            return;
+        }
+
+        const jsonData = await readExcelFile(file);
+        if (!jsonData || jsonData.length === 0) {
+            alert("The Excel file is empty or invalid.");
+            return;
+        }
+
+        // Fetch master_id
+        let query = supabase
+            .from('beban_biaya_master')
+            .select('id')
+            .eq('kategori', categoryName)
+            .eq('subkategori', subKategori);
+
+        if (currentYear !== null) {
+            query = query.eq('tahun', currentYear);
+        }
+
+        const { data: masterData, error: masterError } = await query.single();
+        if (masterError || !masterData) {
+            alert(`Budget not set for ${categoryName} - ${subKategori} (${currentYear || 'no year'})`);
+            return;
+        }
+
+        // Map and validate rows
+        const transactionsToInsert = jsonData.map(row => {
+            // Mapping flexible column names
+            const date = row['Tanggal Kegiatan'] || row['Tanggal'] || row['Date'];
+            const name = row['Nama Kegiatan'] || row['Kegiatan'] || row['Name'];
+            const count = parseInt(row['Jumlah Orang'] || row['Orang'] || row['Count'] || 0);
+            const cost = parseFormattedNumber(row['Biaya Kegiatan'] || row['Biaya'] || row['Cost'] || 0);
+
+            if (!date || !name) return null;
+
+            return {
+                master_id: masterData.id,
+                tanggal_kegiatan: date,
+                nama_kegiatan: name,
+                jumlah_orang: count,
+                biaya_kegiatan: cost
+            };
+        }).filter(t => t !== null);
+
+        if (transactionsToInsert.length === 0) {
+            alert("No valid data found in the Excel file. Please ensure column names match the template.");
+            return;
+        }
+
+        const confirmed = confirm(`Are you sure you want to import ${transactionsToInsert.length} transactions?`);
+        if (!confirmed) return;
+
+        const { error: insertError } = await supabase
+            .from('beban_biaya_transaksi')
+            .insert(transactionsToInsert);
+
+        if (insertError) throw insertError;
+
+        showSuccessModal(`${transactionsToInsert.length} transaksi berhasil di-import!`, 'Import Berhasil');
+        
+        await new Promise(resolve => setTimeout(resolve, 200));
+        await loadSubcategoryData(module, categoryName, subKategori, currentYear);
+
+    } catch (error) {
+        console.error('Error importing Excel:', error);
+        alert('Error importing Excel: ' + error.message);
+    }
+}
+
+// Function to handle template download
+function handleDownloadTemplate(categoryName, subKategori) {
+    const headers = ['Tanggal Kegiatan', 'Nama Kegiatan', 'Jumlah Orang', 'Biaya Kegiatan'];
+    downloadExcelTemplate(headers, `Template_Import_${categoryName}_${subKategori}`);
 }

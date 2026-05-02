@@ -1,5 +1,5 @@
 import { supabase } from './supabaseClient.js';
-import { formatCurrency, exportToExcel, exportToPDF, formatNumberWithDots, setupNumberFormatting, parseFormattedNumber, showSuccessModal, showToast, showConfirmModal } from './utils.js';
+import { formatCurrency, exportToExcel, exportToPDF, formatNumberWithDots, setupNumberFormatting, parseFormattedNumber, showSuccessModal, showToast, showConfirmModal, readExcelFile, downloadExcelTemplate } from './utils.js';
 import { applyPagination, isAdmin } from './utils.js';
 import Chart from 'chart.js/auto';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
@@ -660,7 +660,12 @@ export async function loadBPDContent(container, year = null) {
                             <input type="text" id="searchInput" class="form-control border rounded px-2 py-1" placeholder="Cari data..." style="width: 300px;">
                             <button id="exportExcelTable" class="export-button excel">Excel</button>
                             <button id="exportPDFTable" class="export-button pdf">PDF</button>
-                            ${admin ? '<button id="addDataBtn" class="add-transaction-button">+ Tambah Data</button>' : ''}
+                            ${admin ? `
+                                <button id="importBpdBtn" class="import-button">Import Excel</button>
+                                <button id="templateBpdBtn" class="template-button">Template Excel</button>
+                                <input type="file" id="importBpdFileInput" class="hidden" accept=".xlsx, .xls">
+                                <button id="addDataBtn" class="add-transaction-button">+ Tambah Data</button>
+                            ` : ''}
                         </div>
                     </div>
                     <!-- Add Data Form (hidden by default) -->
@@ -976,6 +981,27 @@ export async function loadBPDContent(container, year = null) {
 
                 // Add form validation
                 setupFormValidation();
+            }
+
+            // Import BPD buttons
+            const importBtn = document.getElementById('importBpdBtn');
+            const fileInput = document.getElementById('importBpdFileInput');
+            if (importBtn && fileInput) {
+                importBtn.addEventListener('click', () => fileInput.click());
+                fileInput.addEventListener('change', async (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        await handleImportBpdExcel(file, container, year);
+                        fileInput.value = ''; // Reset
+                    }
+                });
+            }
+
+            const templateBtn = document.getElementById('templateBpdBtn');
+            if (templateBtn) {
+                templateBtn.addEventListener('click', () => {
+                    handleDownloadBpdTemplate();
+                });
             }
         }
     } catch (error) {
@@ -1364,6 +1390,25 @@ export async function loadBPDContentByYear(container, year) {
         tableControls.appendChild(exportPDFBtn);
 
         if (admin) {
+            const importBtn = document.createElement('button');
+            importBtn.id = 'importBpdBtn';
+            importBtn.className = 'import-button';
+            importBtn.textContent = 'Import Excel';
+            tableControls.appendChild(importBtn);
+
+            const templateBtn = document.createElement('button');
+            templateBtn.id = 'templateBpdBtn';
+            templateBtn.className = 'template-button';
+            templateBtn.textContent = 'Template Excel';
+            tableControls.appendChild(templateBtn);
+
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.id = 'importBpdFileInput';
+            fileInput.className = 'hidden';
+            fileInput.accept = '.xlsx, .xls';
+            tableControls.appendChild(fileInput);
+
             const addDataBtn = document.createElement('button');
             addDataBtn.id = 'addDataBtn';
             addDataBtn.className = 'add-transaction-button';
@@ -1722,6 +1767,27 @@ export async function loadBPDContentByYear(container, year) {
 
                 // Add form validation
                 setupFormValidation();
+            }
+
+            // Import BPD buttons
+            const importBtn = document.getElementById('importBpdBtn');
+            const fileInput = document.getElementById('importBpdFileInput');
+            if (importBtn && fileInput) {
+                importBtn.addEventListener('click', () => fileInput.click());
+                fileInput.addEventListener('change', async (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        await handleImportBpdExcel(file, container, year);
+                        fileInput.value = ''; // Reset
+                    }
+                });
+            }
+
+            const templateBtn = document.getElementById('templateBpdBtn');
+            if (templateBtn) {
+                templateBtn.addEventListener('click', () => {
+                    handleDownloadBpdTemplate();
+                });
             }
         }
     } catch (error) {
@@ -2456,4 +2522,96 @@ async function handleDeleteRecord(recordId, container, year = null) {
         console.error('Error deleting BPD data:', error);
         showToast('Error deleting BPD data: ' + error.message, 'error');
     }
+}
+
+// Function to handle Excel import for BPD
+async function handleImportBpdExcel(file, container, year) {
+    try {
+        const jsonData = await readExcelFile(file);
+        if (!jsonData || jsonData.length === 0) {
+            alert("The Excel file is empty or invalid.");
+            return;
+        }
+
+        // Map and validate rows
+        const recordsToInsert = jsonData.map(row => {
+            const namaAudit = row['Nama Audit'];
+            const namaPemesan = row['Nama Pemesan'];
+            const jenisAudit = row['Jenis Kegiatan'] || row['Jenis'];
+            const noSpd = row['No SPD'] || row['SPD'];
+            const noBpd = row['No BPD'] || row['BPD'];
+            const pAwal = row['Periode Awal'];
+            const pAkhir = row['Periode Akhir'];
+            const lama = parseInt(row['Lama Kegiatan (hari)'] || row['Lama'] || 0);
+            
+            const bBerangkat = parseFormattedNumber(row['Biaya Berangkat'] || 0);
+            const bPenginapan = parseFormattedNumber(row['Biaya Penginapan'] || 0);
+            const bPulang = parseFormattedNumber(row['Biaya Pulang'] || 0);
+            const rbd = parseFormattedNumber(row['Rincian Biaya Dinas'] || 0);
+            const realisasi = parseFormattedNumber(row['Realisasi'] || 0);
+
+            if (!namaAudit || !namaPemesan || !pAwal || !pAkhir) return null;
+
+            // Calculate totals
+            const totalAkomodasi = bBerangkat + bPenginapan + bPulang;
+            const totalAkomodasiBiayaDinas = totalAkomodasi + realisasi;
+
+            return {
+                nama_audit: namaAudit,
+                nama_pemesan: namaPemesan,
+                jenis_audit: jenisAudit,
+                no_spd: noSpd,
+                no_bpd: noBpd,
+                periode_awal: pAwal,
+                periode_akhir: pAkhir,
+                lama_audit: lama,
+                biaya_berangkat: bBerangkat,
+                biaya_penginapan: bPenginapan,
+                biaya_pulang: bPulang,
+                total_akomodasi: totalAkomodasi,
+                rincian_biaya_dinas: rbd,
+                total_akomodasi_biaya_dinas: totalAkomodasiBiayaDinas,
+                realisasi: realisasi,
+                created_at: new Date().toISOString()
+            };
+        }).filter(r => r !== null);
+
+        if (recordsToInsert.length === 0) {
+            alert("No valid data found in the Excel file. Please ensure column names match the template.");
+            return;
+        }
+
+        const confirmed = confirm(`Are you sure you want to import ${recordsToInsert.length} BPD records?`);
+        if (!confirmed) return;
+
+        const { error: insertError } = await supabase
+            .from('bpd_master')
+            .insert(recordsToInsert);
+
+        if (insertError) throw insertError;
+
+        showSuccessModal(`${recordsToInsert.length} data BPD berhasil di-import!`, 'Import Berhasil');
+        
+        await new Promise(resolve => setTimeout(resolve, 200));
+        if (year) {
+            await loadBPDContentByYear(container, year);
+        } else {
+            await loadBPDContent(container);
+        }
+
+    } catch (error) {
+        console.error('Error importing Excel:', error);
+        alert('Error importing Excel: ' + error.message);
+    }
+}
+
+// Function to handle BPD template download
+function handleDownloadBpdTemplate() {
+    const headers = [
+        'Nama Audit', 'Nama Pemesan', 'Jenis Kegiatan', 'No SPD', 'No BPD', 
+        'Periode Awal', 'Periode Akhir', 'Lama Kegiatan (hari)', 
+        'Biaya Berangkat', 'Biaya Penginapan', 'Biaya Pulang', 
+        'Rincian Biaya Dinas', 'Realisasi'
+    ];
+    downloadExcelTemplate(headers, 'Template_Import_BPD');
 }
