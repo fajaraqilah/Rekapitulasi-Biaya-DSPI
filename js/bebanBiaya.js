@@ -18,6 +18,65 @@ let currentModule = null;
 let currentCategoryName = null;
 let currentYear = null;
 let currentAdmin = false;
+let currentSubcategoryOptions = [];
+
+function renderSubcategoryOptions(searchTerm = '') {
+    const subSelect = document.getElementById('subKategoriSelect');
+    const optionsContainer = document.getElementById('subKategoriOptions');
+    const searchInput = document.getElementById('subKategoriSearchInput');
+    if (!subSelect) return;
+
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+    const previousSelection = subSelect.value;
+    const filteredOptions = currentSubcategoryOptions.filter((sub) =>
+        sub.toLowerCase().includes(normalizedSearch)
+    );
+
+    subSelect.options.length = 0;
+
+    const defaultLabel = filteredOptions.length > 0
+        ? '-- Pilih Subkategori --'
+        : '-- Subkategori tidak ditemukan --';
+    const defaultOption = new Option(defaultLabel, '', true, true);
+    defaultOption.disabled = true;
+    subSelect.add(defaultOption);
+
+    if (optionsContainer) {
+        optionsContainer.innerHTML = '';
+    }
+
+    filteredOptions.forEach((sub) => {
+        const option = document.createElement('option');
+        option.value = sub;
+        option.textContent = sub;
+        subSelect.appendChild(option);
+
+        if (optionsContainer) {
+            const optionButton = document.createElement('button');
+            optionButton.type = 'button';
+            optionButton.className = 'w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors';
+            optionButton.dataset.value = sub;
+            optionButton.textContent = sub;
+            optionsContainer.appendChild(optionButton);
+        }
+    });
+
+    if (previousSelection && filteredOptions.includes(previousSelection)) {
+        subSelect.value = previousSelection;
+    }
+
+    if (optionsContainer && filteredOptions.length === 0) {
+        optionsContainer.innerHTML = `
+            <div class="px-4 py-3 text-sm text-gray-500">
+                Subkategori tidak ditemukan
+            </div>
+        `;
+    }
+
+    if (searchInput && document.activeElement !== searchInput && subSelect.value) {
+        searchInput.value = subSelect.value;
+    }
+}
 
 // Function to load Beban Biaya content
 export async function loadBebanBiayaContent(container, module, year = null) {
@@ -70,22 +129,24 @@ function renderInitialContent(container, module, categoryName, admin) {
     </label>
 
     <div class="relative group">
-        <!-- Dropdown -->
-        <select 
-    id="subKategoriSelect"
-    class="block w-full px-4 py-3 
-           bg-white border border-gray-300 border-b-2 rounded-lg
-           text-gray-700 cursor-pointer
-           transition-all duration-200 ease-out
-           hover:border-blue-400 hover:shadow-md
-           focus:ring-2 focus:ring-blue-300 focus:border-blue-500
-           appearance-none"
->
-
-            <option value="" disabled selected hidden>-- Pilih Subkategori --</option>
+        <select id="subKategoriSelect" class="hidden">
+            <option value="" disabled selected>-- Pilih Subkategori --</option>
         </select>
 
-        <!-- Custom Arrow -->
+        <input
+            type="text"
+            id="subKategoriSearchInput"
+            class="block w-full px-4 py-3 bg-white border border-gray-300 border-b-2 rounded-lg text-gray-700 cursor-text transition-all duration-200 ease-out hover:border-blue-400 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-500"
+            placeholder="-- Pilih Subkategori --"
+            autocomplete="off"
+            spellcheck="false"
+        >
+
+        <div
+            id="subKategoriOptions"
+            class="hidden absolute z-10 mt-2 w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg"
+        ></div>
+
         <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none">
             <svg id="dropdownArrow"
                 xmlns="http://www.w3.org/2000/svg"
@@ -153,10 +214,15 @@ function renderInitialContent(container, module, categoryName, admin) {
 
 async function populateSubcategoryDropdown(categoryName, year) {
     const subSelect = document.getElementById('subKategoriSelect');
+    const searchInput = document.getElementById('subKategoriSearchInput');
     if (!subSelect) return;
 
     subSelect.innerHTML =
         '<option value="" disabled selected hidden>-- Pilih Subkategori --</option>';
+    currentSubcategoryOptions = [];
+    if (searchInput) {
+        searchInput.value = '';
+    }
 
     const parsedYear = Number(year);
     if (!Number.isInteger(parsedYear)) {
@@ -173,22 +239,24 @@ async function populateSubcategoryDropdown(categoryName, year) {
             .order('subkategori');
 
         if (error) throw error;
-
         if (!data || data.length === 0) {
             console.warn(
                 `No subkategori found for ${categoryName} - ${parsedYear}`
             );
+            renderSubcategoryOptions();
             return;
         }
 
-        const uniqueSubs = [...new Set(data.map(d => d.subkategori))];
+        // Gunakan Set dan Trim untuk memastikan keunikan data
+        currentSubcategoryOptions = [...new Set(
+            data
+                .map((d) => d.subkategori)
+                .filter((sub) => typeof sub === 'string')
+                .map((sub) => sub.trim())
+                .filter(Boolean)
+        )];
 
-        uniqueSubs.forEach(sub => {
-            const option = document.createElement('option');
-            option.value = sub;
-            option.textContent = sub;
-            subSelect.appendChild(option);
-        });
+        renderSubcategoryOptions();
 
     } catch (err) {
         console.error('Error populating subcategory dropdown:', err);
@@ -196,8 +264,78 @@ async function populateSubcategoryDropdown(categoryName, year) {
 }
 // Function to set up initial event listeners
 function setupInitialEventListeners(module, categoryName, admin) {
-    // Subcategory dropdown change event
+    const searchInput = document.getElementById('subKategoriSearchInput');
+    const optionsContainer = document.getElementById('subKategoriOptions');
     const subSelect = document.getElementById('subKategoriSelect');
+
+    const closeOptions = () => {
+        if (!optionsContainer || !searchInput) return;
+        optionsContainer.classList.add('hidden');
+
+        if (subSelect && subSelect.value) {
+            searchInput.value = subSelect.value;
+            return;
+        }
+
+        searchInput.value = '';
+    };
+
+    const openOptions = () => {
+        if (!optionsContainer) return;
+        optionsContainer.classList.remove('hidden');
+        renderSubcategoryOptions(searchInput ? searchInput.value : '');
+    };
+
+    if (searchInput) {
+        searchInput.addEventListener('focus', () => {
+            if (subSelect && searchInput.value === subSelect.value) {
+                searchInput.select();
+            }
+            openOptions();
+        });
+
+        searchInput.addEventListener('click', (event) => {
+            event.stopPropagation();
+            openOptions();
+        });
+
+        searchInput.addEventListener('input', function () {
+            if (subSelect) {
+                subSelect.value = '';
+            }
+            openOptions();
+        });
+
+        searchInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                closeOptions();
+            }
+        });
+    }
+
+    if (optionsContainer) {
+        optionsContainer.addEventListener('mousedown', async (event) => {
+            const optionButton = event.target.closest('button[data-value]');
+            if (!optionButton) return;
+            event.preventDefault();
+            if (!subSelect) return;
+
+            subSelect.value = optionButton.dataset.value;
+            if (searchInput) {
+                searchInput.value = optionButton.dataset.value;
+            }
+            subSelect.dispatchEvent(new Event('change'));
+            closeOptions();
+        });
+    }
+
+    document.addEventListener('click', (event) => {
+        if (!searchInput || !optionsContainer) return;
+        if (searchInput.contains(event.target) || optionsContainer.contains(event.target)) return;
+        closeOptions();
+    });
+
+    // Subcategory dropdown change event
     if (subSelect) {
         subSelect.addEventListener('change', async function () {
             if (this.value) {
@@ -569,9 +707,9 @@ function updateUIWithCategorySummaryData(summaryData, subcategorySummaries, cate
                             </tr>
                         </thead>
                         <tbody id="bebanBiayaSummaryTableBody">
-                            ${subcategorySummaries.length === 0 ? 
-                                '<tr><td colspan="5" class="text-center py-4">No data available</td></tr>' : 
-                                subcategorySummaries.map(sub => `
+                            ${subcategorySummaries.length === 0 ?
+                '<tr><td colspan="5" class="text-center py-4">No data available</td></tr>' :
+                subcategorySummaries.map(sub => `
                                     <tr>
                                         <td class="font-medium">${sub.subkategori || '-'}</td>
                                         <td>${formatCurrency(sub.jumlah_awal)}</td>
@@ -580,7 +718,7 @@ function updateUIWithCategorySummaryData(summaryData, subcategorySummaries, cate
                                         <td>${sub.jumlah_transaksi}</td>
                                     </tr>
                                 `).join('')
-                            }
+            }
                         </tbody>
                     </table>
                 </div>
@@ -1296,7 +1434,7 @@ async function handleImportExcel(file, module, categoryName, subKategori) {
         if (insertError) throw insertError;
 
         showSuccessModal(`${transactionsToInsert.length} transaksi berhasil di-import!`, 'Import Berhasil');
-        
+
         await new Promise(resolve => setTimeout(resolve, 200));
         await loadSubcategoryData(module, categoryName, subKategori, currentYear);
 
