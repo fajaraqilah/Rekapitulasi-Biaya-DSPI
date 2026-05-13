@@ -5,9 +5,9 @@
   "main": "index.js",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "npm run build && vite build",
     "preview": "vite preview",
-    "prepare": "node -e \"process.exit(0)\"",
+    "prepare": "chmod +x node_modules/.bin/vite || true",
     "postinstall": "npm run prepare",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
