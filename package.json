@@ -3,13 +3,11 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+{
   "scripts": {
     "dev": "vite",
-    "build": "npm run build && vite build",
-    "preview": "vite preview",
-    "prepare": "chmod +x node_modules/.bin/vite || true",
-    "postinstall": "npm run prepare",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "engines": {
     "node": "24.x"
